@@ -209,7 +209,7 @@ for T_np in Ts:
         if n > 2:
             A = rate_factor(T, n=n)
         else:
-            A = rate_factor(T, n=n, m=1.0e-2, m_exp=1.4)
+            A = rate_factor(T, n=n, m=1.0e-2, m_exp=-1.4)
 
         model = icepack.models.HybridModel(friction=pos_linear_weertman)
         solver = icepack.solvers.FlowSolver(model, **opts)

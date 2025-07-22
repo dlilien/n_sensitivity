@@ -265,7 +265,7 @@ def main():
                     if n > 2:
                         A1_fd = rate_factor(T, n=n)
                     else:
-                        A1_fd = rate_factor(T, n=n, m=1.0e-2, m_exp=1.4)
+                        A1_fd = rate_factor(T, n=n, m=1.0e-2, m_exp=-1.4)
                     A1_np = A1_fd.values()[0]
                     A1 = firedrake.Function(h0.function_space()).interpolate(A1_np)
 
