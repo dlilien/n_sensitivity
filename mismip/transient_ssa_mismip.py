@@ -246,7 +246,7 @@ def main():
                     if n > 2:
                         A = rate_factor(firedrake.Constant(T_np + 273.15), n=n)
                     else:
-                        A = rate_factor(firedrake.Constant(T_np + 273.15), n=n, m=1.0e-2, m_exp=-1.4)
+                        A = rate_factor(firedrake.Constant(T_np + 273.15), n=n, m=5.0e-3, m_exp=-1.4)
                     modA = input_dict[T_np][n]["modA"]
 
                 if args.standard:

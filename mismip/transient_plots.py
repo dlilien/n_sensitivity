@@ -97,11 +97,6 @@ def main():
                         if not os.path.exists(fn):
                             times[physics][sim][init][fric][n] = None
                             continue
-                        if init == "standard" and n == 1.8:
-                            # Exclude these since they are crap?
-                            # pass
-                            times[physics][sim][init][fric][n] = None
-                            continue
                         print(fn)
                         with firedrake.CheckpointFile(fn, "r") as fin:
                             if physics == "":

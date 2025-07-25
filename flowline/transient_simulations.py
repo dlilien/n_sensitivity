@@ -93,7 +93,7 @@ def main():
         a = a_unpert
     a = firedrake.Function(Q).interpolate(a)
 
-    if init in ["identical", "inferred"]:
+    if init in ["identical", "standard"]:
         output_template = "outputs/{:s}_{:s}_T{:d}_n{:2.1f}_{:s}_nbumps{:d}.h5"
     else:
         output_template = "outputs/{:s}_{:s}_dev{:0.2f}_n{:2.1f}_{:s}_nbumps{:d}.h5"
@@ -142,7 +142,7 @@ def main():
         for T_np in Ts:
             for n in ns:
                 input_dict[T_np][n] = {}
-                if init in ["identical", "inferred"]:
+                if init in ["identical", "standard"]:
                     inv_name = "T{:d}_n{:2.1f}".format(T_np, n)
                 else:
                     inv_name = "dev{:0.2f}_n{:2.1f}".format(T_np, n)
@@ -155,8 +155,6 @@ def main():
                 input_dict[T_np][n]["uRCFi"] = chk.load_function(mesh, inv_name + "_uRCFi")
                 if init == "identical":
                     input_dict[T_np][n]["A"] = chk.load_function(mesh, inv_name + "_A")
-                elif init == "parinferred":
-                    input_dict[T_np][n]["A"] = firedrake.Constant(chk.get_attr("A", inv_name))
 
     for fricname in args.frics:
         friction = frictions[fricname]
@@ -192,14 +190,14 @@ def main():
                             u = firedrake.Function(V).interpolate(chk.load_function(mesh1, "u", idx=index_prev))
                         else:
                             continue
-                if init in ["identical", "parinferred"]:
+                if init in ["identical"]:
                     A = input_dict[T_np][n]["A"]
                 else:
                     T = firedrake.Constant(T_np + 273.15)
                     if n > 2:
                         A = rate_factor(T, n=n)
                     else:
-                        A = rate_factor(T, n=n, m=1.0e-2, m_exp=-1.4)
+                        A = rate_factor(T, n=n, m=5.0e-3, m_exp=-1.4)
 
                 model = icepack.models.HybridModel(friction=friction)
                 solver = icepack.solvers.FlowSolver(model, **opts)
@@ -213,7 +211,7 @@ def main():
                 sqrtC = input_dict[T_np][n]["C" + fricname]
                 C = firedrake.Function(sqrtC.function_space()).interpolate(sqrtC**2.0)
 
-                if init in ["identical", "inferred"]:
+                if init in ["identical", "standard"]:
                     print("T={:d}, n={:2.1f}, {:s}".format(T_np, n, fricstring))
                 else:
                     print("dev={:0.2f}, n={:2.1f}, {:s}".format(T_np, n, fricstring))

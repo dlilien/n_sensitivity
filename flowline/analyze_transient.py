@@ -51,14 +51,14 @@ weertman_3 = get_weertman(m=3)
 weertman_1 = get_weertman(m=1)
 frictions = {"3": weertman_3, "1": weertman_1, "RCFi": regularized_coulomb}
 
-samba_mnt = "/Volumes/slate/Rheology/n4/flowline/outputs/"
+samba_mnt = "/Volumes/slate/Rheology/n4/flowline/outputs"
 if os.path.exists(samba_mnt):
     basename = samba_mnt
 else:
     basename = "outputs"
 
 # Load the "True" file to get the time vector
-first_fn = "outputs/{:s}_{:s}_T{:d}_n{:2.1f}_{:s}_nbumps{:d}.h5".format("retreat", "identical", -10, 3.0, "3", 2)
+first_fn = samba_mnt + "/{:s}_{:s}_T{:d}_n{:2.1f}_{:s}_nbumps{:d}.h5".format("retreat", "identical", -10, 3.0, "3", 2)
 print(first_fn)
 with firedrake.CheckpointFile(first_fn, "r") as chk:
     mesh = chk.load_mesh("flowline")

@@ -249,7 +249,7 @@ def main():
                 if n > 2:
                     A0_fd = rate_factor(T, n=n)
                 else:
-                    A0_fd = rate_factor(T, n=n, m=1.0e-2, m_exp=-1.4)
+                    A0_fd = rate_factor(T, n=n, m=5.0e-3, m_exp=-1.4)
                 A0 = A0_fd.values()[0]
 
                 PETSc.Sys.Print("A0 is {:f}".format(A0))

@@ -24,7 +24,7 @@ for init in full_all_outs:
     # fn = "inputs/lcurve_inversion_results_{:s}_bumps2.h5".format(init)
     all_names = []
     for n in ns:
-        fn = "/Volumes/slate/Rheology/n4/flowline/inputs/bak/lcurve_inversion_results_{:s}_bumps2.h5".format("standard")
+        fn = "inputs/lcurve_inversion_results_{:s}_bumps2.h5".format("standard")
 
         with h5py.File(fn) as fin:
             for L in LCaps:

@@ -210,7 +210,7 @@ def main():
                     if n > 2:
                         A = rate_factor(firedrake.Constant(T_np + 273.15), n=n)
                     else:
-                        A = rate_factor(firedrake.Constant(T_np + 273.15), n=n, m=1.0e-2, m_exp=-1.4)
+                        A = rate_factor(firedrake.Constant(T_np + 273.15), n=n, m=5.0e-3, m_exp=-1.4)
                     modA = input_dict[T_np][n]["modA"]
                 h_af = firedrake.max_value(input_dict[T_np]["s0"] - input_dict[T_np]["h0"] * (1 - ρ_I / ρ_W), 0)
                 ramp = firedrake.min_value(1, h_af / 50.0)

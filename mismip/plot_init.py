@@ -7,17 +7,26 @@ from icepack.constants import ice_density as ρ_I, water_density as ρ_W, gravit
 from libmismip import mismip_melt, mirrored_tripcolor, mirrored_tricontour
 from icepackaccs.mismip import mismip_bed_topography
 from matplotlib import gridspec
+import matplotlib.colors as mcolors
+
 
 # Needed to avoid assertion error bug in firedrake
 mesh1d = firedrake.IntervalMesh(100, 120)
 firedrake.ExtrudedMesh(mesh1d, layers=1)
 
 
+class MidpointNormalize(mcolors.Normalize):
+    def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
+        self.midpoint = midpoint
+        mcolors.Normalize.__init__(self, vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        v_ext = np.max( [ np.abs(self.vmin), np.abs(self.vmax) ] )
+        x, y = [-v_ext, self.midpoint, v_ext], [0, 0.5, 1]
+        return np.ma.masked_array(np.interp(value, x, y))
+
+
 def kmfmt(x, pos):
-    return "{:d}".format(int(x / 1000.0))
-
-
-def kmfmt_off(x, pos):
     return "{:d}".format(int(x / 1000.0))
 
 
@@ -43,7 +52,7 @@ def steady_state():
         h0 = chk.load_function(fine_mesh, "thickness")
         s0 = chk.load_function(fine_mesh, "surface")
 
-    ssa_fn = "inputs/ssa_standard_initialization_mismip_incremental.h5"
+    ssa_fn = "inputs/ssa_standard_initialization_mismip.h5"
     with firedrake.CheckpointFile(ssa_fn, "r") as chk:
         ssa_mesh = chk.load_mesh("fine_mesh2d")
         u0_ssa = chk.load_function(ssa_mesh, "input_u_ssa")
@@ -211,9 +220,8 @@ def inversion_results_alln():
             A2d.dat.data[is_floating.dat.data < 0.5] = np.nan
             return A2d
 
-        Alim = 100
         plim = 20
-        vlim = 100
+        vlim = 25
 
         umag0 = firedrake.Function(Qv).interpolate(firedrake.sqrt(firedrake.dot(u0, u0)))
         p0 = interp((extract_bed(umag0) / extract_surface(umag0)))
@@ -239,7 +247,9 @@ def inversion_results_alln():
             p = interp(getbed(umag) / getsurf(umag))
             dp = interp((p - p0) / p0 * 100)
             cm_dp = mirrored_tripcolor(dp, axes=axs, vmin=-plim, vmax=plim, cmap="seismic")
-            cm_A = mirrored_tripcolor(mask_A(A), axes=axs, vmin=-Alim, vmax=Alim, cmap="BrBG")
+            # cm_A = mirrored_tripcolor(mask_A(A), axes=axs, cmap="BrBG", norm=mcolors.SymLogNorm(linthresh=1.0, linscale=1.0, vmin=-Alim, vmax=Alim, base=10))
+            normA = MidpointNormalize(vmin=-100, vmax=100, midpoint=0)
+            cm_A = mirrored_tripcolor(mask_A(A), axes=axs, cmap="BrBG",  norm=normA)
             du = interp(getothersurf2(u[0]) - getothersurf(u0[0]))
             cm_vel = mirrored_tripcolor(du, axes=axv, vmin=-vlim, vmax=vlim, cmap="PiYG")
 
@@ -254,7 +264,7 @@ def inversion_results_alln():
             )
 
         cbr_dp = plt.colorbar(cm_dp, cax=cax_dslide, extend="both", orientation="horizontal")
-        cbr_A = plt.colorbar(cm_A, cax=cax_A, extend="both", orientation="horizontal")
+        cbr_A = plt.colorbar(cm_A, cax=cax_A, extend="max", orientation="horizontal")
         cbr_vel = plt.colorbar(cm_vel, cax=cax_vel, extend="both", orientation="horizontal")
 
         cbr_perc.set_label(label="Sliding (%)", fontsize=9)
@@ -315,21 +325,22 @@ def inversion_results_alln():
 def inversion_results_trueident():
     for phys in ["ssa_"]:
         gs = gridspec.GridSpec(
-            3,
+            5,
             8,
             width_ratios=(1, 0.2, 0.033333, 0.3, 0.033333, 0.3, 0.033333, 0.3),
+            height_ratios=(1, 1, 1, 0.35, 0.1),
             wspace=0.0,
             left=0.075,
             right=0.995,
             top=0.98,
-            bottom=0.150,
+            bottom=0.130,
         )
-        fig = plt.figure(figsize=(7.0, 3.2))
+        fig = plt.figure(figsize=(7.0, 3.75))
         ax_true = fig.add_subplot(gs[0, 0])
 
         cax_slide = fig.add_subplot(gs[0, 2])
-        cax_dslide = fig.add_subplot(gs[0, 4])
-        cax_vel = fig.add_subplot(gs[0, 6])
+        cax_dslide = fig.add_subplot(gs[4, 0])
+        cax_vel = fig.add_subplot(gs[4, 2:])
 
         ax_slide_true3 = fig.add_subplot(gs[1, 0])
         ax_vel_true3 = fig.add_subplot(gs[1, 2:])
@@ -428,11 +439,11 @@ def inversion_results_trueident():
             vmax=plim,
             cmap="seismic",
         )
-        cbr_dp = plt.colorbar(cm_dp, cax=cax_dslide, extend="both")
+        cbr_dp = plt.colorbar(cm_dp, cax=cax_dslide, extend="both", orientation="horizontal")
         cm_vel = mirrored_tripcolor(
             func(func(true_u_3[0]) - dfunc(u0[0])), axes=ax_vel_true3, vmin=-vlim, vmax=vlim, cmap="PiYG"
         )
-        cbr_vel = plt.colorbar(cm_vel, cax=cax_vel, extend="both")
+        cbr_vel = plt.colorbar(cm_vel, cax=cax_vel, extend="both", orientation="horizontal")
         du = func(func(true_u_3[0]) - dfunc(u0[0]))
         rms = (
             firedrake.assemble(du**2.0 * firedrake.dx)

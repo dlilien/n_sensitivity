@@ -21,27 +21,6 @@ import os
 import xarray as xr
 
 
-RdPu = ["#fbb4b9", "#f768a1", "#c51b8a", "#7a0177"]
-Blues = ["#6baed6", "#3182bd", "#08519c"]
-Greens = ["#74c476", "#31a354", "#006d2c"]
-Reds = ["#fb6a4a", "#de2d26", "#a50f15"]
-Purples = ["#9e9ac8", "#756bb1", "#54278f"]
-Oranges = ["#fd8d3c", "#e6550d", "#a63603"]
-PuBuGn = ["#67a9cf", "#1c9099", "#016c59"]
-BuPr = ["#8c96c6", "#8856a7", "#810f7c"]
-YlGn = ["#c2e699", "#78c679", "#238443"]
-Yellows = ["#FFF394", "#FFE761", "#FFDC2E"]
-
-CW1 = ["#ffff2d", "#bac317", "#7b8900"]  # Yellow
-CW2 = ["#f6c137", "#d09c1f", "#aa7900"]  # Light Orange
-CW3 = ["#f69537", "#e67a1e", "#d55e00"]  # Dark orange
-CW4 = ["#ef3c42", "#a51e23", "#610004"]  # Cranberry
-CW5 = ["#b528c5", "#7f168a", "#4c0554"]  # Purple
-CW6 = ["#3438bd", "#1a1c81", "#00014a"]  # Royal blues
-# CW7 = ["#4592ca", "#006bc0", "#0040ac"]  # Lighter blues
-CW7 = ["#52c67f", "#2c803d", "#004100"]  # BlueGreens
-CW8 = ["#79c725", "#387f14", "#003d00"]  # True Greens
-
 CW1 = ["#FFA07A", "#FF8C00", "#FF2400"]
 CW2 = ["#FF6347", "#FF0000", "#6B0000"]
 CW3 = ["#ADD8E6", "#4682B4", "#00008B"]
@@ -51,12 +30,6 @@ CW6 = ["#DDA0DD", "#BA55D3", "#4B0082"]
 CW7 = ["#98FB98", "#32CD32", "#004D00"]
 CW8 = ["#9ACD32", "#6B8E23", "#405D20"]
 
-
-tripcolors1 = [Oranges[0], Greens[0], Blues[0], Oranges[1], Greens[1], Blues[1], Oranges[2], Greens[2], Blues[2]]
-
-tripcolors2 = [Reds[0], PuBuGn[0], Purples[0], Reds[1], PuBuGn[1], Purples[1], Reds[2], PuBuGn[2], Purples[2]]
-
-tripcolors3 = [RdPu[0], YlGn[0], BuPr[0], RdPu[1], YlGn[1], BuPr[1], RdPu[2], YlGn[2], BuPr[2]]
 
 color_dict = {
     "identical": {
@@ -73,21 +46,7 @@ color_dict = {
         },
         4.0: {-20: CW7[0], -10: CW7[1], -5: CW7[2]},
     },
-    "parinferred": {
-        1.8: {
-            0.75: CW1[0],
-            1.0: CW1[1],
-            1.25: CW1[2],
-        },
-        3.0: {0.75: CW3[0], 1.0: CW3[1], 1.25: CW3[2]},
-        3.5: {
-            0.75: CW5[0],
-            1.0: CW5[1],
-            1.25: CW5[2],
-        },
-        4.0: {0.75: CW7[0], 1.0: CW7[1], 1.25: CW7[2]},
-    },
-    "inferred": {
+    "standard": {
         1.8: {
             -12: CW2[0],
             -10: CW2[1],
