@@ -15,7 +15,6 @@ from matplotlib import gridspec
 from matplotlib.ticker import NullFormatter
 
 sys.path.append("../mismip/")
-from discrete_plots import plot_init
 
 
 plotvel = True
@@ -129,6 +128,7 @@ for nbumps in [2, 1]:
                             a = chk.load_function(mesh, name="a")
                             C_sqrd = chk.load_function(mesh, name="C_sqrd")
                             hist = chk.get_timestepping_history(mesh, "h")
+                            this_times = hist["time"]
                             volumes = np.zeros_like(times.astype(float))
                             vels = np.zeros_like(times.astype(float))
                             terminus = np.zeros_like(times.astype(float))
@@ -136,7 +136,7 @@ for nbumps in [2, 1]:
                                 fig, ax = plt.subplots()
                                 norm = colors.Normalize(vmin=0, vmax=times[-1])
                                 sm = plt.cm.ScalarMappable(norm=norm, cmap=plt.cm.jet)
-                            for i, time in enumerate(times):
+                            for i, time in enumerate(this_times):
                                 h = chk.load_function(mesh, name="h", idx=i)
                                 if plotsurf:
                                     if i % 10 == 0:
@@ -560,142 +560,3 @@ for nbumps in [2, 1]:
             np.max(tdiff), int(da.time.values[np.argmax(tdiff)])
         )
     )
-
-    fig, axes = plt.subplots(3, 1, figsize=(3, 4.25), sharex=True)
-    fig.subplots_adjust(right=0.98, top=0.99, bottom=0.320, left=0.18, wspace=0.1)
-    for init in ["standard"]:
-        Tind = -10
-        dev = 1.0
-        for n in ns:
-            if init == "standard":
-                color = color_dict[init][n][Tind]
-                off = -offsize
-            else:
-                color = color_dict[init][n][dev]
-                off = offsize
-
-            if n == 1.8:
-                off += -offsize / 5
-            elif n == 3:
-                off += 0
-            else:
-                off += offsize / 5
-            for fricname, friction in frictions.items():
-                if fricname == "1":
-                    marker = "o"
-                elif fricname == "3":
-                    marker = "s"
-                else:
-                    marker = "d"
-                loc = {"T": Tind, "dev": dev, "n": n, "fric": fricname, "attr": "vol"}
-                ref_vols = out_dict["retreat"]["identical"].loc[loc]
-                vols = out_dict["retreat"][init].loc[loc]
-                for time, ax in zip([100, 1000, 10000], axes):
-                    index = np.where(ref_vols.time == time)[0][0]
-                    if fricname == "1":
-                        label = "Standard $n$={:2.1f}".format(n)
-                        off = -offsize
-                    else:
-                        label = None
-                    ax.plot(
-                        2 + off,
-                        (vols - ref_vols)[index] / (ref_vols[index] - ref_vols[0]) * 1.0e2,
-                        color=color,
-                        marker=marker,
-                        linestyle="None",
-                        label=label,
-                    )
-
-    axes[0].plot([], [], marker="o", color="k", linestyle="None", label="$m$=1")
-    axes[0].plot([], [], marker="s", color="k", linestyle="None", label="$m$=3")
-    axes[0].plot([], [], marker="d", color="k", linestyle="None", label="RCFi")
-    axes[0].legend(loc="upper left", bbox_to_anchor=(-0.25, -2.7), ncol=2, frameon=False)
-
-    axes[2].set_xlim(1.8, 2.2)
-    # axes[2].set_xticks([1.9, 2.0, 2.1])
-    # axes[2].set_xticklabels(["$n$=1.8", "$n$=3", "$n$=4"])
-    axes[2].set_xticks([1.9, 2.1])
-    axes[2].set_xticklabels(["Standard"])
-
-    axes[1].set_ylabel(r"$\Delta V$ compared to identical (%)")
-
-    for ax, time, letter in zip(axes, targ_times, "abcde"):
-        if time < 1000:
-            ax.text(0.01, 0.99, letter, transform=ax.transAxes, ha="left", va="top", fontsize=12)
-            ax.text(0.99, 0.99, "{:d} yrs".format(time), transform=ax.transAxes, ha="right", va="top", fontsize=12)
-        else:
-            ax.text(0.01, 0.99, letter, transform=ax.transAxes, ha="left", va="top", fontsize=12)
-            ax.text(
-                0.99, 0.99, "{:d} kyr".format(time // 1000), transform=ax.transAxes, ha="right", va="top", fontsize=12
-            )
-
-    fig.savefig("figs/initialization_sensitivity_nbumps{:d}.pdf".format(nbumps))
-
-    targ_times = [100, 500, 10000]
-    fig, axes = plt.subplots(3, 1, figsize=(3, 4.25), sharex=True)
-    fig.subplots_adjust(right=0.98, top=0.99, bottom=0.320, left=0.18, wspace=0.1)
-    for init in ["standard"]:
-        Tind = -10
-        dev = 1.0
-        for n in ns:
-            if init == "standard":
-                color = color_dict[init][n][Tind]
-            else:
-                color = color_dict[init][n][dev]
-
-            if n == 1.8:
-                off = -offsize
-            elif n == 3:
-                off = 0
-            else:
-                off = offsize
-            for fricname, friction in frictions.items():
-                if fricname == "1":
-                    marker = "o"
-                elif fricname == "3":
-                    marker = "s"
-                else:
-                    marker = "d"
-                loc = {"T": Tind, "dev": dev, "n": n, "fric": fricname, "attr": "vol"}
-                ref_vols = out_dict["retreat"]["identical"].loc[loc]
-                vols = out_dict["retreat"][init].loc[loc]
-                for time, ax in zip(targ_times, axes):
-                    index = np.where(ref_vols.time == time)[0][0]
-                    if fricname == "1":
-                        label = "Standard $n$={:2.1f}".format(n)
-                    else:
-                        label = None
-                    ax.plot(
-                        2 + off,
-                        (vols - ref_vols)[index] / (ref_vols[index] - ref_vols[0]) * 1.0e2,
-                        color=color,
-                        marker=marker,
-                        linestyle="None",
-                        label=label,
-                    )
-
-    plot_init(axes, pos=3)
-
-    axes[0].plot([], [], marker="o", color="k", linestyle="None", label="$m$=1")
-    axes[0].plot([], [], marker="s", color="k", linestyle="None", label="$m$=3")
-    axes[0].plot([], [], marker="d", color="k", linestyle="None", label="RCFi")
-    axes[0].legend(loc="upper left", bbox_to_anchor=(-0.25, -2.7), ncol=2, frameon=False)
-
-    axes[2].set_xlim(1.7, 3.3)
-    # axes[2].set_xticks([1.9, 2.0, 2.1])
-    # axes[2].set_xticklabels(["$n$=1.8", "$n$=3", "$n$=4"])
-    axes[2].set_xticks([2, 3])
-    axes[2].set_xticklabels(["Flowline", "MISMIP+"])
-
-    axes[1].set_ylabel(r"$\Delta V$ compared to identical (%)")
-
-    for ax, time, letter in zip(axes, targ_times, "abcde"):
-        ax.text(0.01, 0.99, letter, transform=ax.transAxes, ha="left", va="top", fontsize=12)
-        if time < 1000:
-            ax.text(0.99, 0.99, "{:d} yrs".format(time), transform=ax.transAxes, ha="right", va="top", fontsize=12)
-        else:
-            ax.text(
-                0.99, 0.99, "{:d} kyr".format(time // 1000), transform=ax.transAxes, ha="right", va="top", fontsize=12
-            )
-
-    fig.savefig("figs/initialization_sensitivity_overall_nbumps{:d}.pdf".format(nbumps))

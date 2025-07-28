@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import numpy as np
 import firedrake
 import icepack
 import icepack.models.hybrid
@@ -38,8 +39,6 @@ for nbumps in [2, 1]:
     with firedrake.CheckpointFile(checkpoint_fn, "r") as chk:
         mesh = chk.load_mesh("flowline")
 
-    parcheckpoint_fn = "inputs/mixed_init_bumps{:d}.h5".format(nbumps)
-
     Q = firedrake.FunctionSpace(mesh, "CG", 2, vfamily="R", vdegree=0)
     V = firedrake.FunctionSpace(mesh, "CG", 2, vfamily="GL", vdegree=2)
     V_2 = firedrake.FunctionSpace(mesh, "CG", 2, vfamily="GL", vdegree=2)
@@ -63,6 +62,8 @@ for nbumps in [2, 1]:
         u0_10 = firedrake.Function(V_8).interpolate(fields["u4"])
         C0 = firedrake.Function(Q).interpolate(fields["C"])
         b = firedrake.Function(Q).interpolate(fields["bed"])
+
+    us_10 = extract_surface(u0_10)
 
     cache_fn = "inputs/flowline_n3_{:03d}C_weertman3_bumps{:1d}.h5".format(-20, nbumps)
     with firedrake.CheckpointFile(cache_fn, "r") as chk:
@@ -115,22 +116,8 @@ for nbumps in [2, 1]:
                     output_dict[T_np][n]["u3"] = chk.load_function(mesh, inv_name + "_u3")
                     output_dict[T_np][n]["uRCFi"] = chk.load_function(mesh, inv_name + "_uRCFi")
 
-    with firedrake.CheckpointFile(parcheckpoint_fn, "r") as chk:
-        for dev in devs:
-            for n in ns:
-                output_dict[dev][n] = {}
-
-                inv_name = "dev{:0.2f}_n{:2.1f}".format(dev, n)
-
-                if chk.has_attr("already_run", inv_name) and chk.get_attr("already_run", inv_name):
-                    done.append(inv_name)
-
-                    output_dict[dev][n]["C1"] = chk.load_function(mesh, inv_name + "_C1")
-                    output_dict[dev][n]["C3"] = chk.load_function(mesh, inv_name + "_C3")
-                    output_dict[dev][n]["CRCFi"] = chk.load_function(mesh, inv_name + "_CRCFi")
-                    output_dict[dev][n]["u1"] = chk.load_function(mesh, inv_name + "_u1")
-                    output_dict[dev][n]["u3"] = chk.load_function(mesh, inv_name + "_u3")
-                    output_dict[dev][n]["uRCFi"] = chk.load_function(mesh, inv_name + "_uRCFi")
+                    du = us_10 - firedrake.Function(us_10.function_space()).interpolate(extract_surface(output_dict[T_np][n]["u1"]))
+                    print("{:s}: RMS: {:f} m/yr, max v: {:f} m/yr".format(inv_name, (firedrake.assemble(du **2 * firedrake.dx) / firedrake.assemble(firedrake.conditional(extract_surface(h0_10) > 10.0, 1.0, 0.0) * firedrake.dx)) ** 0.5, np.max(output_dict[T_np][n]["u1"].dat.data[:])))
 
     fig, axes = plt.subplots(4, 1, sharex=True, figsize=(7.0, 5.0), gridspec_kw={"height_ratios": (2, 1, 1, 1)})
     axes[0].set_xlim(0, 500e3)

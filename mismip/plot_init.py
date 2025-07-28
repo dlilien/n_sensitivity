@@ -221,7 +221,7 @@ def inversion_results_alln():
             return A2d
 
         plim = 20
-        vlim = 25
+        vlim = 5
 
         umag0 = firedrake.Function(Qv).interpolate(firedrake.sqrt(firedrake.dot(u0, u0)))
         p0 = interp((extract_bed(umag0) / extract_surface(umag0)))

@@ -24,7 +24,10 @@ for init in full_all_outs:
     # fn = "inputs/lcurve_inversion_results_{:s}_bumps2.h5".format(init)
     all_names = []
     for n in ns:
-        fn = "inputs/lcurve_inversion_results_{:s}_bumps2.h5".format("standard")
+        if n != 3:
+            fn = "inputs/lcurve_inversion_results_{:s}_bumps2.h5".format("standard")
+        else:
+            fn = "inputs/lcurve_inversion_results_{:s}_bumps2.h5".format("mixed")
 
         with h5py.File(fn) as fin:
             for L in LCaps:
@@ -113,9 +116,7 @@ for init, ls, marker in [("standard", "solid", "o")]:
         for L, smooth, mis in zip(Ls, smoothness, misfit):
             ax.text(mis, smooth, "$10^{:d}$".format(int(np.log10(L))), ha="left", va="bottom")
 
-ax.plot([], [], color="0.6", ls="solid", label="Standard")
 ax.set_xlabel("Misfit (m yr$^{-1}$)")
 ax.set_ylabel("Smoothness (MPa yr m$^{-2}$)")
 ax.legend(loc="best")
 fig.savefig("figs/lcurve_standard.pdf")
-plt.show()
