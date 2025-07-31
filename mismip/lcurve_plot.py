@@ -179,7 +179,7 @@ def main():
             plt.legend(loc="best")
             plt.savefig("plots/lcurves_{:2.1f}_{:s}_A.pdf".format(n, name))
 
-        ind_C = np.where(exps == 5)[0][0]
+        ind_C = np.where(exps == 4)[0][0]
 
         plt.figure()
         plt.loglog()
@@ -230,7 +230,7 @@ def main():
         plt.legend(loc="best")
         plt.savefig("plots/lcurves_{:s}.pdf".format(name))
 
-        minreg = [1.0e-7, 1.0e-6]
+        minreg = [5.0e-8, 5.0e-6]
         for k, n in enumerate(ns):
             ind_A = np.where(exps == LC_dict[n])[0][0]
             label = "n={:2.1f}".format(n)
@@ -263,7 +263,7 @@ def main():
         ax.text(0.01, 0.99, letter, transform=ax.transAxes, ha="left", va="top", fontsize=14)
     ax2.set_xlabel("Misfit (m yr$^{-1}$)")
     ax1.set_ylim(minreg[0], 1e-5)
-    ax2.set_ylim(minreg[1], 3e-3)
+    ax2.set_ylim(minreg[1], 5e-4)
     ax2.set_xlim(0.1, 300)
 
     ax1.legend(loc="upper right", ncol=2)

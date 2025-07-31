@@ -214,17 +214,13 @@ for nbumps in [2, 1]:
             unpert_vels = da_unpert_rel.loc[{"attr": "vel", **base_dict}]
             unpert_vols = da_unpert_rel.loc[{"attr": "vol", **base_dict}]
 
-        figcomb = plt.figure(figsize=(7, 6.5))
-        gs = gridspec.GridSpec(
-            5,
-            6,
-            width_ratios=(1, 0.35, 1, 0.35, 0.1, 0.9),
-            height_ratios=(1, 1, 1, 0.1, 0.8),
-            top=0.99,
-            right=0.99,
-            wspace=0.0,
-            bottom=0.06,
-        )
+        if initname == "standard":
+            figcomb = plt.figure(figsize=(7, 5.5))
+            bottom = 0.08
+        else:
+            figcomb = plt.figure(figsize=(7, 6.5))
+            bottom = 0.06
+        gs = gridspec.GridSpec(5, 6, width_ratios=(1, 0.35, 1, 0.35, 0.1, 0.9), height_ratios=(1, 1, 1, 0.1, 0.8), top=0.99, right=0.99, wspace=0.0, bottom=bottom)
         axes_byattr = [
             figcomb.add_subplot(gs[0, :-1]),
             figcomb.add_subplot(gs[1, :-1]),
@@ -234,7 +230,7 @@ for nbumps in [2, 1]:
 
         figdum, axdum = plt.subplots()
 
-        if not norm:
+        if not norm and initname != "standard":
             if initname == "identical":
                 axes_zoom = [
                     axdum,
@@ -261,7 +257,7 @@ for nbumps in [2, 1]:
             axes_zoom[2].set_xticks([])
             axes_zoom[2].set_yticks([])
 
-        if not norm:
+        if not norm and initname != "standard":
             axlist = [axes_byattr, axes_zoom]
         else:
             axlist = [axes_byattr]
@@ -294,34 +290,6 @@ for nbumps in [2, 1]:
                         color="0.6",
                         alpha=0.5,
                         label="Unperturbed",
-                        ec="none",
-                    )
-
-                    axes[0].fill_between(
-                        da.time,
-                        unpert_vels_nonrel.loc[{"n": [3.0, 3.5, 4.0]}].min(dim=contract_dims),
-                        unpert_vels_nonrel.loc[{"n": [3.0, 3.5, 4.0]}].max(dim=contract_dims),
-                        color="0.4",
-                        alpha=0.5,
-                        label="Unpert. w/o $n$=1.8",
-                        ec="none",
-                    )
-                    axes[1].fill_between(
-                        da.time,
-                        unpert_terms.loc[{"n": [3.0, 3.5, 4.0]}].min(dim=contract_dims) * 1.0e-3,
-                        unpert_terms.loc[{"n": [3.0, 3.5, 4.0]}].max(dim=contract_dims) * 1.0e-3,
-                        color="0.4",
-                        alpha=0.5,
-                        label="Unpert. w/o $n$=1.8",
-                        ec="none",
-                    )
-                    axes[2].fill_between(
-                        da.time,
-                        unpert_vols.loc[{"n": [3.0, 3.5, 4.0]}].min(dim=contract_dims) * 1.0e-6,
-                        unpert_vols.loc[{"n": [3.0, 3.5, 4.0]}].max(dim=contract_dims) * 1.0e-6,
-                        color="0.4",
-                        alpha=0.5,
-                        label="Unpert. w/o $n$=1.8",
                         ec="none",
                     )
 
@@ -470,11 +438,15 @@ for nbumps in [2, 1]:
         axes_byattr[1].plot([], [], marker="o", color="0.6", linestyle="None", label="$m$=1")
         axes_byattr[1].plot([], [], marker="d", color="0.6", linestyle="None", label="RCFi")
 
-        if not norm:
+        if not norm and initname != "standard":
             axes_byattr[1].indicate_inset_zoom(axes_zoom[1], edgecolor="black")
             axes_byattr[2].indicate_inset_zoom(axes_zoom[2], edgecolor="black")
 
-        axes_byattr[1].legend(loc="upper left", bbox_to_anchor=(1.01, 2.24), fontsize=8)
+        if initname == "identical":
+            axes_byattr[1].legend(loc="upper left", bbox_to_anchor=(1.01, 2.24), fontsize=8)
+        else:
+            axes_byattr[1].legend(loc="upper left", bbox_to_anchor=(1.01, 2.00), fontsize=8)
+
         if norm:
             axes_byattr[0].set_ylabel("Rel. change in \nspeed (m yr$^{-1}$)")
             axes_byattr[1].set_ylabel("Rel. change in\nterm. position (km)")
@@ -484,12 +456,21 @@ for nbumps in [2, 1]:
             axes_byattr[1].set_ylabel("Change in terminus\nposition (km)")
             axes_byattr[2].set_ylabel("Change in\nvolume (km$^2$)")
         if initname in ["standard"]:
-            axes_byattr[0].set_ylim(0, 100)
-            axes_byattr[1].set_ylim(-200, 75)
-            axes_byattr[2].set_ylim(-250, 750)
-            axes_bytime[0].set_ylim(-3, 2)
-            axes_bytime[1].set_ylim(-100, 150)
-            axes_bytime[2].set_ylim(-1500, 500)
+            if nbumps == 2:
+                axes_byattr[0].set_ylim(60, 100)
+                axes_byattr[1].set_ylim(-30, 20)
+                axes_byattr[2].set_ylim(-110, 10)
+                axes_bytime[0].set_ylim(-3, 1)
+                axes_bytime[1].set_ylim(-50, 75)
+                axes_bytime[2].set_ylim(-75, 125)
+            else:
+                axes_byattr[0].set_ylim(60, 100)
+                axes_byattr[1].set_ylim(-30, 30)
+                axes_byattr[2].set_ylim(-150, 10)
+                axes_bytime[0].set_ylim(-3, 1)
+                axes_bytime[1].set_ylim(-50, 75)
+                axes_bytime[2].set_ylim(-75, 125)
+
         else:
             axes_bytime[0].set_ylim(-0.05, 0.15)
             axes_bytime[1].set_ylim(-3, 5)
@@ -508,7 +489,7 @@ for nbumps in [2, 1]:
         axes_bytime[0].set_ylabel("Relative change\nin volume (%)")
 
         for ax, letter in zip(axes_byattr, "abcdefg"):
-            if norm:
+            if norm or initname == "standard":
                 ax.text(0.01, 0.99, letter, transform=ax.transAxes, fontsize=12, ha="left", va="top")
             else:
                 ax.text(0.07, 0.99, letter, transform=ax.transAxes, fontsize=12, ha="left", va="top")

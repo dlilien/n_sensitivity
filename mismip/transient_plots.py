@@ -112,7 +112,7 @@ def main():
                             vafs[physics][sim][init][fric][n] = fin.get_attr("metadata", "vab")
                             vels[physics][sim][init][fric][n] = fin.get_attr("metadata", "max_vel")
                             print(
-                                "Max vel: {:4.2f} m/yr at {:f} yrs, GL ret 100: {:4.1f} km, GL ret 500: {:4.1f} km, vol init {:5.0f} km^3, vol loss 100: {:5.0f} km^3, vol loss final {:5.0f} km^3".format(
+                                    "Max vel: {:4.2f} m/yr at {:f} yrs, GL ret 100: {:4.1f} km, GL ret 500: {:4.1f} km, vol loss 100: {:5.0f} km^3, vol loss final {:5.0f} km^3".format(
                                     np.max(vels[physics][sim][init][fric][n]),
                                     times[physics][sim][init][fric][n][np.argmax(vels[physics][sim][init][fric][n])],
                                     gls[physics][sim][init][fric][n][0]
@@ -120,7 +120,6 @@ def main():
                                         np.argmin(abs(times[physics][sim][init][fric][n] - 100))
                                     ],
                                     gls[physics][sim][init][fric][n][0] - gls[physics][sim][init][fric][n][-1],
-                                    vafs[physics][sim][init][fric][n][0],
                                     vafs[physics][sim][init][fric][n][0]
                                     - vafs[physics][sim][init][fric][n][
                                         np.argmin(abs(times[physics][sim][init][fric][n] - 100))

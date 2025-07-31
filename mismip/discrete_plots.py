@@ -257,7 +257,16 @@ def plot_pts(
                             marker=marker,
                             linestyle="None",
                         )
-
+                        print(initname, fricname, n,
+                            (
+                                vafs["ssa_"]["retreat"][initname][fricname][n][index]
+                                - vafs[""]["retreat"][initname][fricname][n][index]
+                            )
+                            / (
+                                vafs[""]["retreat"][initname][fricname][n][index]
+                                - vafs[""]["retreat"][initname][fricname][n][0]
+                            )
+                            * 1.0e2)
                     if plot_init:
                         if initname in ["standard"]:
                             if n in vafs[phys]["retreat"]["identical"][fricname]:
