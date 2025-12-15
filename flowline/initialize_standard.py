@@ -164,14 +164,6 @@ def smoothness(C):
     )
 
 
-LCap = 1.0e6
-
-
-def regularization(C):
-    L = firedrake.Constant(LCap)
-    return 0.5 / Lx * (L) ** 2 * firedrake.inner(firedrake.grad(C), firedrake.grad(C)) * firedrake.ds_b(mesh)
-
-
 opts = {"dirichlet_ids": [1], "diagnostic_solver_type": "icepack"}
 opts = {
     "dirichlet_ids": [1],
@@ -195,6 +187,18 @@ opts = {
 
 for T_np in Ts:
     for n in ns:
+        if n == 3.5:
+            LCap = 1.0e6
+        else:
+            LCap = 1.0e5
+
+
+        def regularization(C):
+            L = firedrake.Constant(LCap)
+            return 0.5 / Lx * (L) ** 2 * firedrake.inner(firedrake.grad(C), firedrake.grad(C)) * firedrake.ds_b(mesh)
+
+
+
         inv_name = "T{:d}_n{:2.1f}".format(T_np, n)
         with firedrake.CheckpointFile(checkpoint_fn, "r") as chk:
             if chk.has_attr("already_run", inv_name) and chk.get_attr("already_run", inv_name):

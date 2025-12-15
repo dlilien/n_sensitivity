@@ -9,7 +9,13 @@ import matplotlib.pyplot as plt
 from icepackaccs import extract_surface, extract_bed
 from icepackaccs.friction import get_weertman, get_regularized_coulomb_simp, friction_stress
 from transient_simulations import a_unpert, a_pert, a_retreat
-from true_flowline import color_dict
+
+# Need to muck around to use color consistently outside a package
+import sys
+from pathlib import Path
+parent_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(parent_dir))
+from common_colors import color_dict_T
 
 
 def kmfmt(x, pos):
@@ -33,6 +39,9 @@ nx = 2001
 # Without these we get a mysterious error on new firedrake installs
 mesh1d = firedrake.IntervalMesh(nx, Lx)
 mesh_dum = firedrake.ExtrudedMesh(mesh1d, layers=1)
+
+plot_x = np.linspace(0, 425e3, 500)
+
 
 for nbumps in [2, 1]:
     checkpoint_fn = "inputs/standard_init_bumps{:d}.h5".format(nbumps)
@@ -85,6 +94,25 @@ for nbumps in [2, 1]:
         s0_5 = firedrake.Function(Q).interpolate(fields["surf"])
         u0_5 = firedrake.Function(V_8).interpolate(fields["u4"])
 
+    da_interper = firedrake.PointEvaluator(mesh, np.vstack((plot_x, np.ones_like(plot_x) * 0.5)).T)
+    bed_interper = firedrake.PointEvaluator(mesh, np.vstack((plot_x, np.zeros_like(plot_x))).T)
+    surf_interper = firedrake.PointEvaluator(mesh, np.vstack((plot_x, np.ones_like(plot_x))).T)
+    mesh_x = extract_bed(h0_10).ufl_domain()
+    interper = firedrake.PointEvaluator(mesh_x, plot_x)
+    Q1d = extract_bed(h0_10).function_space()
+
+    def da(obj):
+        return da_interper.evaluate(firedrake.Function(V_8).interpolate(obj))
+
+    def get_at_surf(obj):
+        return surf_interper.evaluate(firedrake.Function(V_8).interpolate(obj))
+
+    def get_at_bed(obj):
+        return interper.evaluate(extract_bed(obj))
+
+    def get_taub(u, C):
+        return interper.evaluate(firedrake.Function(Q1d).interpolate(-extract_bed(friction_stress(u, C**2.0, m=3)) * 1000))
+
     Ts = [-12, -10, -8]
     ns = [1.8, 3.0, 3.5, 4.0]
     devs = [0.75, 1.0, 1.25]
@@ -126,88 +154,60 @@ for nbumps in [2, 1]:
     axes[1].set_ylabel("Speed (m yr$^{-1}$)")
     axes[1].set_ylim(0, 125)
 
-    firedrake.plot(
-        icepack.depth_average(firedrake.Function(Q).interpolate(b + h0_20 * (h0_20 > 10))),
-        axes=axes[0],
-        edgecolor=color_dict["identical"][3.0][-20],
+    axes[0].plot(
+        plot_x,
+        da(b + h0_20 * (h0_20 > 10)),
+        color=color_dict_T["identical"][3.0][-20],
         label=r"T=-20 $^\circ$C",
     )
-    firedrake.plot(
-        icepack.depth_average(firedrake.Function(Q).interpolate(b + h0_10 * (h0_10 > 10))),
-        axes=axes[0],
-        edgecolor=color_dict["identical"][3.0][-10],
+    axes[0].plot(
+        plot_x,
+        da(b + h0_10 * (h0_10 > 10)),
+        color=color_dict_T["identical"][3.0][-10],
         label=r"T=-10 $^\circ$C",
     )
-    firedrake.plot(
-        icepack.depth_average(firedrake.Function(Q).interpolate(b + h0_5 * (h0_5 > 10))),
-        axes=axes[0],
-        edgecolor=color_dict["identical"][3.0][-5],
+    axes[0].plot(
+        plot_x,
+        da(b + h0_5 * (h0_5 > 10)),
+        color=color_dict_T["identical"][3.0][-5],
         label=r"T=-5 $^\circ$C",
     )
+
+
     firedrake.plot(icepack.depth_average(b), axes=axes[0], edgecolor="brown", label="_nolegend_")
     axes[0].legend(loc="lower left")
     axes[0].set_ylabel("Elevation (m)")
     axes[0].set_ylim(0, 6000)
 
-    taub_10 = firedrake.Function(extract_bed(C0).function_space()).interpolate(
-        extract_bed(C0) ** 2.0 * abs(extract_bed(u0_10)) ** (1.0 / 3.0) * 1000 * (2 * (extract_bed(h0_10) > 10) - 1)
-    )
-    taub_20 = firedrake.Function(extract_bed(C0).function_space()).interpolate(
-        extract_bed(C0) ** 2.0 * abs(extract_bed(u0_20)) ** (1.0 / 3.0) * 1000 * (2 * (extract_bed(h0_20) > 10) - 1)
-    )
-    taub_5 = firedrake.Function(extract_bed(C0).function_space()).interpolate(
-        extract_bed(C0) ** 2.0 * abs(extract_bed(u0_5)) ** (1.0 / 3.0) * 1000 * (2 * (extract_bed(h0_5) > 10) - 1)
-    )
-    firedrake.plot(taub_20, axes=axes[2], edgecolor=color_dict["identical"][3.0][-20])
-    firedrake.plot(taub_10, axes=axes[2], edgecolor=color_dict["identical"][3.0][-10])
-    firedrake.plot(taub_5, axes=axes[2], edgecolor=color_dict["identical"][3.0][-5])
+    taub_20 = get_taub(u0_20, C0)
+    taub_10 = get_taub(u0_10, C0)
+    taub_5 = get_taub(u0_5, C0)
+
+    axes[2].plot(plot_x, taub_20, color=color_dict_T["identical"][3.0][-20])
+    axes[2].plot(plot_x, taub_10, color=color_dict_T["identical"][3.0][-10])
+    axes[2].plot(plot_x, taub_5, color=color_dict_T["identical"][3.0][-5])
     axes[2].set_ylabel(r"$\tau_b$ (kPa)")
     axes[2].set_ylim(0, 300)
 
-    # firedrake.plot(icepack.depth_average(u0), axes=axes[1], label="Depth averaged")
-    # firedrake.plot(firedrake.Function(extract_surface(u0).function_space()).interpolate(extract_surface(u0) - extract_bed(u0)), axes=axes[1], label="Shear")
-    firedrake.plot(
-        extract_surface(firedrake.Function(V_8).interpolate(u0_10 * (2 * (h0_10 > 10) - 1))),
-        axes=axes[1],
-        edgecolor=color_dict["identical"][3.0][-10],
-        label="_nolegend_",
-        linewidth=3,
-    )
-    firedrake.plot(
-        extract_bed(firedrake.Function(V_8).interpolate(u0_10 * (2 * (h0_10 > 10) - 1))),
-        axes=axes[1],
-        edgecolor=color_dict["identical"][3.0][-10],
-        label="_nolegend_",
-        lw=1,
-    )
-    firedrake.plot(
-        extract_surface(firedrake.Function(V_8).interpolate(u0_20 * (2 * (h0_20 > 10) - 1))),
-        axes=axes[1],
-        edgecolor=color_dict["identical"][3.0][-20],
-        label="_nolegend_",
-        linewidth=3,
-    )
-    firedrake.plot(
-        extract_bed(firedrake.Function(V_8).interpolate(u0_20 * (2 * (h0_20 > 10) - 1))),
-        axes=axes[1],
-        edgecolor=color_dict["identical"][3.0][-20],
-        label="_nolegend_",
-    )
-    firedrake.plot(
-        extract_surface(firedrake.Function(V_8).interpolate(u0_20 * (2 * (h0_5 > 10) - 1))),
-        axes=axes[1],
-        edgecolor=color_dict["identical"][3.0][-5],
-        label="_nolegend_",
-        linewidth=3,
-    )
-    firedrake.plot(
-        extract_bed(firedrake.Function(V_8).interpolate(u0_5 * (2 * (h0_5 > 10) - 1))),
-        axes=axes[1],
-        edgecolor=color_dict["identical"][3.0][-5],
-        label="_nolegend_",
-    )
-    axes[1].plot([], [], color="k", lw=3, label="Surface")
-    axes[1].plot([], [], color="k", lw=1, label="Basal")
+    for u, T in zip([u0_20, u0_10, u0_5], [-20, -10, -5]):
+        axes[1].plot(
+            plot_x,
+            get_at_surf(u),
+            color=color_dict_T["identical"][3.0][T],
+            label="_nolegend_",
+            linestyle="solid"
+        )
+        axes[1].plot(
+            plot_x,
+            get_at_bed(u),
+            color=color_dict_T["identical"][3.0][T],
+            label="_nolegend_",
+            linestyle="dashed"
+        )
+
+
+    axes[1].plot([], [], color="k", linestyle="solid", label="Surface")
+    axes[1].plot([], [], color="k", linestyle="dashed", label="Basal")
     axes[1].legend(loc="best")
 
     axes[3].set_ylabel("SMB (m yr$^{-1}$)")
@@ -215,7 +215,7 @@ for nbumps in [2, 1]:
     firedrake.plot(icepack.depth_average(a_retreat), axes=axes[3], edgecolor="0.6", label="Retreat")
     # firedrake.plot(icepack.depth_average(a_pert), axes=axes[3], edgecolor='0.6', label="Perturbed")
     axes[3].set_ylim(-1.5, 1.5)
-    axes[3].axhline(0, color="k", lw="0.5")
+    # axes[3].axhline(0, color="k", lw="0.5")
     axes[3].legend(loc="best")
 
     for ax, letter in zip(axes, "abcde"):
@@ -239,16 +239,34 @@ for nbumps in [2, 1]:
     axes[1].set_ylim(-2, 102)
     axes[2].set_ylim(-4, 200)
 
+    firedrake.plot(
+        extract_surface(firedrake.Function(V_8).interpolate(u0_10 * (2 * (h0_10 > 10) - 1))),
+        axes=axes[0],
+        edgecolor="k",
+        lw=2,
+        label="True\n" + r"({:d}$^\circ$C $n$={:2.1f})".format(-10, 3),
+        zorder=1000
+    )
+
+    firedrake.plot(
+        firedrake.Function(extract_bed(C0).function_space()).interpolate(
+            extract_bed(firedrake.Function(V_8).interpolate(u0_10 * 100 * (2 * (h0_10 > 10) - 1)))
+            / extract_surface(firedrake.Function(V_8).interpolate(u0_10))
+        ),
+        axes=axes[1],
+        edgecolor="k",
+        label=[None],
+        zorder=1000
+    )
+
+    taub = get_taub(u0_10, C0)
+    axes[2].plot(plot_x, taub, color="k", zorder=1000)
+
     ind = 0
-    for T in Ts:
+    for T, lw in zip([Ts[1], Ts[0], Ts[2]], [2, 1, 3]):
         for n in ns:
-            if False:  # T == -10 and n == 3:
-                color = "k"
-                lw = 2
-            else:
-                color = color_dict["standard"][n][T]
-                ind += 1
-                lw = 1
+            color = color_dict_T["standard"][n][T]
+            ind += 1
             inv_name = "T{:d}_n{:2.1f}".format(T, n)
             if inv_name not in done:
                 print("No", inv_name)
@@ -262,10 +280,11 @@ for nbumps in [2, 1]:
                     firedrake.assemble(misfit**2.0 * firedrake.dx)
                     / firedrake.assemble(extract_surface(2 * (h0_10 > 10) - 1) * firedrake.dx)
                 ) ** 0.5
-            firedrake.plot(
-                extract_surface(firedrake.Function(V_8).interpolate(output_dict[T][n]["u3"] * (2 * (h0_10 > 10) - 1))),
-                axes=axes[0],
-                edgecolor=color,
+
+            y = get_at_surf(output_dict[T][n]["u3"] * (2 * (h0_10 > 10) - 1))
+            axes[0].plot(
+                plot_x, y,
+                color=color,
                 lw=lw,
                 label=r"{:d}$^\circ$C $n$={:2.1f}".format(T, n),
             )
@@ -280,40 +299,21 @@ for nbumps in [2, 1]:
                 axes=axes[1],
                 edgecolor=color,
                 label=[None],
+                lw=lw,
             )
 
-            taub = firedrake.Function(extract_bed(C0).function_space()).interpolate(
-                -extract_bed(friction_stress(output_dict[T][n]["u3"], output_dict[T][n]["C1"] ** 2.0, m=1))
-                * 1000
-                * (2 * (extract_bed(h0_10) > 10) - 1)
-            )
-            firedrake.plot(taub, axes=axes[2], edgecolor=color)
+            taub = get_taub(output_dict[T][n]["u3"], output_dict[T][n]["C3"])
+            axes[2].plot(plot_x, taub, color=color, lw=lw)
+        if T == -10:
+            leg = axes[0].legend(loc="upper left", bbox_to_anchor=(1.01, 0.99), fontsize=9)
+            fig.savefig("figs/initialized_variableC_standard_nbumps{:1d}_{:d}C.pdf".format(nbumps, T))
+            leg.remove()
 
-    for i in range(1):
-        firedrake.plot(
-            extract_surface(firedrake.Function(V_8).interpolate(u0_10 * (2 * (h0_10 > 10) - 1))),
-            axes=axes[0 + i * 3],
-            edgecolor="k",
-            lw=2,
-            label="True\n" + r"({:d}$^\circ$C $n$={:2.1f})".format(-10, 3),
-        )
 
-        firedrake.plot(
-            firedrake.Function(extract_bed(C0).function_space()).interpolate(
-                extract_bed(firedrake.Function(V_8).interpolate(u0_10 * 100 * (2 * (h0_10 > 10) - 1)))
-                / extract_surface(firedrake.Function(V_8).interpolate(u0_10))
-            ),
-            axes=axes[1 + i * 3],
-            edgecolor="k",
-            label=[None],
-        )
-
-        taub = firedrake.Function(extract_bed(C0).function_space()).interpolate(
-            -extract_bed(friction_stress(u0_10, C0**2.0, m=3)) * 1000 * (2 * (extract_bed(h0_10) > 10) - 1)
-        )
-        firedrake.plot(taub, axes=axes[2 + i * 3], edgecolor="k")
-
-    axes[0].legend(loc="upper left", bbox_to_anchor=(1.01, 0.99), fontsize=9)
+    handles, labels = axes[0].get_legend_handles_labels()
+    axes[0].legend([handles[0]] + handles[5:9]  + handles[1:5] + handles[9:13],
+                   [labels[0]] + labels[5:9]  + labels[1:5] + labels[9:13],
+                   loc="upper left", bbox_to_anchor=(1.01, 0.99), fontsize=9)
 
     for ax, letter in zip(axes, "abcdefgh"):
         ax.text(0.01, 0.98, letter, fontsize=14, ha="left", va="top", transform=ax.transAxes)

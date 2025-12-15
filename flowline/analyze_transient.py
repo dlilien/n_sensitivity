@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-import sys
 import os
 import firedrake
 import numpy as np
@@ -9,12 +8,19 @@ from icepackaccs import extract_surface
 from icepackaccs.friction import get_weertman, get_regularized_coulomb_simp
 import matplotlib.pyplot as plt
 from matplotlib import colors
-from true_flowline import u0_coulomb, color_dict
+from true_flowline import u0_coulomb
 from analyze_discrete import plot_pts
 from matplotlib import gridspec
 from matplotlib.ticker import NullFormatter
 
-sys.path.append("../mismip/")
+# Need to muck around to use color consistently outside a package
+import sys
+from pathlib import Path
+parent_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(parent_dir))
+from common_colors import color_dict_T
+
+
 
 
 plotvel = True
@@ -119,7 +125,6 @@ for nbumps in [2, 1]:
                             output_fn = basename + "/{:s}_{:s}_dev{:1.2f}_n{:2.1f}_{:s}_nbumps{:d}.h5".format(
                                 simname, initname, T_np, n, fricname, nbumps
                             )
-                        print(output_fn)
 
                         with firedrake.CheckpointFile(output_fn, "r") as chk:
                             mesh = chk.load_mesh("flowline")
@@ -215,8 +220,8 @@ for nbumps in [2, 1]:
             unpert_vols = da_unpert_rel.loc[{"attr": "vol", **base_dict}]
 
         if initname == "standard":
-            figcomb = plt.figure(figsize=(7, 5.5))
-            bottom = 0.08
+            figcomb = plt.figure(figsize=(7, 6.0))
+            bottom = 0.18
         else:
             figcomb = plt.figure(figsize=(7, 6.5))
             bottom = 0.06
@@ -235,7 +240,7 @@ for nbumps in [2, 1]:
                 axes_zoom = [
                     axdum,
                     axes_byattr[1].inset_axes([0.6, 0.15, 0.3, 0.9], xlim=(1.8e3, 2e3), ylim=(-16, -9)),
-                    axes_byattr[2].inset_axes([1.05, -0.33, 0.27, 1.25], xlim=(3e3, 4e3), ylim=(-60, -41)),
+                    axes_byattr[2].inset_axes([1.05, 0.3, 0.27, 1.25], xlim=(3e3, 4e3), ylim=(-60, -41)),
                 ]
             elif initname == "standard":
                 axes_zoom = [
@@ -271,7 +276,7 @@ for nbumps in [2, 1]:
                         unpert_vels_nonrel.max(dim=contract_dims),
                         color="0.6",
                         alpha=0.5,
-                        label="Unperturbed",
+                        # label="Unperturbed",
                         ec="none",
                     )
                     axes[1].fill_between(
@@ -280,7 +285,7 @@ for nbumps in [2, 1]:
                         unpert_terms.max(dim=contract_dims) * 1.0e-3,
                         color="0.6",
                         alpha=0.5,
-                        label="Unperturbed",
+                        # label="Unperturbed",
                         ec="none",
                     )
                     axes[2].fill_between(
@@ -289,12 +294,12 @@ for nbumps in [2, 1]:
                         unpert_vols.max(dim=contract_dims) * 1.0e-6,
                         color="0.6",
                         alpha=0.5,
-                        label="Unperturbed",
+                        # label="Unperturbed",
                         ec="none",
                     )
 
             ind = 0
-            for T_np in Ts_or_dev:
+            for T_np in [-10]:  # Ts_or_dev:
                 if by_T:
                     Tind = T_np
                     dev = 1.0
@@ -302,7 +307,7 @@ for nbumps in [2, 1]:
                     Tind = -10
                     dev = T_np
                 for n in ns:
-                    color = color_dict[initname][n][T_np]
+                    color = color_dict_T[initname][n][T_np]
                     lw = 1
                     for fricname, friction in frictions.items():
                         if fricname == "1":
@@ -313,7 +318,8 @@ for nbumps in [2, 1]:
                             ls = "dotted"
                         if fricname == "3":
                             if by_T:
-                                label = r"{:d}$^\circ$C $n$={:2.1f}".format(T_np, n)
+                                # label = r"{:d}$^\circ$C $n$={:2.1f}".format(T_np, n)
+                                label = "$n$={:2.1f}".format(n)
                             else:
                                 label = r"{:d}%$A_0$ $n$={:2.1f}".format(int(dev * 100), n)
                         else:
@@ -355,10 +361,10 @@ for nbumps in [2, 1]:
                     da_ident.loc[loc],
                     color="k",
                     ls="solid",
-                    label='"True"\n' + r"({:d}$^\circ$C $n$={:2.1f})".format(-10, 3),
+                    label="True"
                 )
                 loc["attr"] = "term"
-                label = r"True ({:d}$^\circ$C $n$=3)".format(-10)
+                label = "True"
                 axes[1].plot(
                     da_ident.time,
                     (da_ident.loc[loc] - da_ident.loc[loc0(loc)]) / 1.0e3,
@@ -372,7 +378,7 @@ for nbumps in [2, 1]:
                     (da_ident.loc[loc] - da_ident.loc[loc0(loc)]) * 1.0e-6,
                     color="k",
                     ls="solid",
-                    label='"True"\n' + r"({:d}$^\circ$C $n$={:2.1f})".format(-10, 3),
+                    label="True"
                 )
 
         targ_times = [100, 1000, 10000]
@@ -414,17 +420,18 @@ for nbumps in [2, 1]:
         }
 
         if initname == "identical":
-            offsize = 0.1
+            offsize = 0.25
         else:
             offsize = 0.2
 
         plot_pts(
             axes_bytime,
-            Ts_or_dev,
+            [-10],
             vol_dict,
             vol_dict_pert,
             targ_times,
             initname,
+            shade=[T for T in Ts_or_dev if T != -10],
             labelstuff=False,
             legend=False,
             xlabelall=True,
@@ -480,10 +487,9 @@ for nbumps in [2, 1]:
                 axes_byattr[1].set_ylim(-2, 4)
                 axes_byattr[2].set_ylim(-13, 7)
             else:
-                axes_byattr[0].set_yticks(range(55, 90, 10))
-                axes_byattr[0].set_ylim(65, 90)
+                axes_byattr[0].set_ylim(72, 80)
                 axes_byattr[1].set_ylim(-26, 1)
-                axes_byattr[2].set_ylim(-75, 0)
+                axes_byattr[2].set_ylim(-70, 0)
         axes_byattr[2].set_xlabel("Time (kyr)")
 
         axes_bytime[0].set_ylabel("Relative change\nin volume (%)")
@@ -521,6 +527,26 @@ for nbumps in [2, 1]:
                     ha="left",
                     va="top",
                 )
+
+
+        if initname == "identical":
+            axes_bytime[2].text(0.9, 0.28, "Spread with\n$T$=-20 or -5$^\circ$C", transform=figcomb.transFigure, ha="center", va="bottom")
+            axes_bytime[2].annotate("", (2.1, 2.5), (0.9, 0.28), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_bytime[2].annotate("", (3, 21), (0.9, 0.28), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_bytime[1].annotate("", (3, 4.2), (0.9, 0.28), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+        else:
+            axes_bytime[2].text(0.9, 0.38, "Spread with\n$T$=-12, -10, or -8$^\circ$C\n$n$=1.8, 3, 3.5, or 4", transform=figcomb.transFigure, ha="center", va="bottom")
+            axes_bytime[2].annotate("", (2, 95), (0.9, 0.38), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_bytime[1].annotate("", (2, 51), (0.9, 0.38), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+
+            axes_bytime[2].annotate("", (0.85, -13), (0.65, 0.08), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_bytime[1].annotate("", (1.15, -1), (0.55, 0.08), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_bytime[2].text(0.6, 0.00, "Spread with\n$T$=-12, -10, or -8$^\circ$C\nexcluding $n$=3.5", transform=figcomb.transFigure, ha="center", va="bottom")
+
+            axes_byattr[1].text(0.55, 0.7, "Spread of\nunperturbed\nsimulations", transform=figcomb.transFigure, ha="left", va="center")
+            axes_byattr[1].annotate("", (0.4, 0.855), (0.55, 0.7), xycoords="figure fraction", textcoords="figure fraction", arrowprops={"arrowstyle": '->'}, zorder=99999, annotation_clip=False)
+            axes_byattr[1].annotate("", (3500, 2), (0.55, 0.7), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_byattr[2].annotate("", (5000, -3), (0.55, 0.7), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
 
         figcomb.savefig("figs/transient_{:s}_comb_bumps{:d}.pdf".format(initname, nbumps))
 

@@ -6,7 +6,15 @@ import numpy as np
 from icepackaccs import extract_surface
 from icepackaccs.friction import get_weertman, get_regularized_coulomb_simp
 import matplotlib.pyplot as plt
-from true_flowline import u0_coulomb, color_dict
+from true_flowline import u0_coulomb
+from matplotlib.patches import Rectangle
+
+# Need to muck around to use color consistently outside a package
+import sys
+from pathlib import Path
+parent_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(parent_dir))
+from common_colors import color_dict_T
 
 
 plotvel = False
@@ -28,7 +36,7 @@ min_thick = firedrake.Constant(10.0)
 Ts_standard = [-12, -10, -8]
 Ts_ident = [-20, -10, -5]
 devs = [0.75, 1.0, 1.25]
-ns = [1.8, 3, 4]
+ns = [1.8, 3, 3.5, 4]
 
 regularized_coulomb = get_regularized_coulomb_simp(m=3, u_0=u0_coulomb)
 weertman_3 = get_weertman(m=3)
@@ -159,13 +167,13 @@ def main():
 
 
 def plot_pts(
-    axes, Ts, vol_dict, vol_dict_pert, targ_times, initname, labelstuff=True, legend=True, xlabelall=False, offsize=0.25
+    axes, Ts, vol_dict, vol_dict_pert, targ_times, initname, labelstuff=True, legend=True, xlabelall=False, offsize=0.25, shade=None, markersize=8,
 ):
     for ax in axes:
         ax.axhline(0, color="k", zorder=0.5, lw=0.5)
     for T_np in Ts:
         for n in vol_dict[T_np]:
-            color = color_dict[initname][n][T_np]
+            color = color_dict_T[initname][n][T_np]
             for fricname, friction in frictions.items():
                 if fricname == "1":
                     marker = "o"
@@ -176,6 +184,8 @@ def plot_pts(
                 else:
                     marker = "d"
                     off = offsize
+                suboff = (ns.index(n) - 1) / 8 * offsize
+
 
                 for ax, time in zip(axes, targ_times):
                     if n in [1.8, 3.5, 4]:
@@ -187,7 +197,7 @@ def plot_pts(
                         else:
                             label = None
                         ax.plot(
-                            2 + off,
+                            2 + off + suboff,
                             (vol_dict[T_np][n][fricname][time] - vol_dict[T_np][3][fricname][time])
                             / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0])
                             * 1.0e2,
@@ -195,6 +205,7 @@ def plot_pts(
                             marker=marker,
                             linestyle="None",
                             label=label,
+                            markersize=markersize
                         )
 
                     if fricname in ["1", "RCFi"]:
@@ -206,7 +217,7 @@ def plot_pts(
                         else:
                             label = None
                         ax.plot(
-                            3 + off,
+                            3 + off + suboff,
                             (vol_dict[T_np][n][fricname][time] - vol_dict[T_np][n]["3"][time])
                             / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0])
                             * 1.0e2,
@@ -214,19 +225,105 @@ def plot_pts(
                             marker=marker,
                             linestyle="None",
                             label=label,
+                            markersize=markersize
                         )
 
                     if initname == "standard":
                         if T_np in [T for T in Ts if T != -10]:
                             ax.plot(
-                                1 + off,
+                                1 + off + suboff,
                                 (vol_dict[T_np][n][fricname][time] - vol_dict[-10][n][fricname][time])
                                 / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0])
                                 * 1.0e2,
                                 color=color,
                                 marker=marker,
                                 linestyle="None",
+                                markersize=markersize
                             )
+
+    if shade is not None:
+        for ax, time in zip(axes, targ_times):
+
+            vs = []
+            for fricname in frictions:
+                for T_np in shade:
+                    for n in [1.8, 3, 4]:
+                        vs.append((vol_dict[T_np][n][fricname][time] - vol_dict[T_np][3][fricname][time]) / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0]) * 1e2)
+            rect = Rectangle((2 - offsize, np.min(vs)),
+                             offsize * 2,
+                             np.max(vs) - np.min(vs),
+                             zorder=0.5,
+                             fill=False,
+                             hatch="///")
+            ax.add_patch(rect)
+
+            vs = []
+            for fricname in ["1", "RCFi"]:
+                for T_np in shade:
+                    for n in [1.8, 3, 4]:
+                        vs.append((vol_dict[T_np][n][fricname][time] - vol_dict[T_np][n]["3"][time]) / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0]) * 1.0e2)
+            rect = Rectangle((3 - offsize, np.min(vs)),
+                             offsize * 2,
+                             np.max(vs) - np.min(vs),
+                             zorder=0.5,
+                             fill=False,
+                             hatch="///")
+            ax.add_patch(rect)
+
+            if initname == "standard":
+                vs = []
+                for fricname in frictions:
+                    for T_np in shade:
+                        for n in [1.8, 3, 4]:
+                            vs.append((vol_dict[T_np][n][fricname][time] - vol_dict[-10][n][fricname][time]) / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0]) * 1.0e2)
+                rect = Rectangle((1 - offsize, np.min(vs)),
+                                 offsize * 2,
+                                 np.max(vs) - np.min(vs),
+                                 zorder=0.5,
+                                 fill=False,
+                                 hatch="///")
+                ax.add_patch(rect)
+
+            vs = []
+            for fricname in frictions:
+                for T_np in shade:
+                    for n in [1.8, 3, 3.5, 4]:
+                        vs.append((vol_dict[T_np][n][fricname][time] - vol_dict[T_np][3][fricname][time]) / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0]) * 1e2)
+            rect = Rectangle((2 - offsize, np.min(vs)),
+                             offsize * 2,
+                             np.max(vs) - np.min(vs),
+                             zorder=0.5,
+                             fill=False,
+                             hatch='\\\\\\')
+            ax.add_patch(rect)
+
+            vs = []
+            for fricname in ["1", "RCFi"]:
+                for T_np in shade:
+                    for n in [1.8, 3, 3.5, 4]:
+                        vs.append((vol_dict[T_np][n][fricname][time] - vol_dict[T_np][n]["3"][time]) / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0]) * 1.0e2)
+            rect = Rectangle((3 - offsize, np.min(vs)),
+                             offsize * 2,
+                             np.max(vs) - np.min(vs),
+                             zorder=0.5,
+                             fill=False,
+                             hatch="\\\\\\")
+            ax.add_patch(rect)
+
+            if initname == "standard":
+                vs = []
+                for fricname in frictions:
+                    for T_np in shade:
+                        for n in [1.8, 3, 3.5, 4]:
+                            vs.append((vol_dict[T_np][n][fricname][time] - vol_dict[-10][n][fricname][time]) / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0]) * 1.0e2)
+                rect = Rectangle((1 - offsize, np.min(vs)),
+                                 offsize * 2,
+                                 np.max(vs) - np.min(vs),
+                                 zorder=0.5,
+                                 fill=False,
+                                 hatch="\\\\\\")
+                ax.add_patch(rect)
+
 
     if legend:
         axes[0].plot([], [], marker="o", color="k", linestyle="None", label="$m$=1")
