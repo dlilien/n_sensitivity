@@ -5,7 +5,7 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from icepackaccs import extract_surface
-from discrete_plots import color_dict, plot_pts
+from discrete_plots import color_dict_T, plot_pts
 from matplotlib import gridspec
 
 from icepack.constants import ice_density as ρ_I, water_density as ρ_W, gravity as g
@@ -211,35 +211,35 @@ def main():
                     for n in ns:
                         if times[physics][sim][init][fric][n] is not None:
                             if sim == "unperturbed":
-                                label = "{:s} n={:1.1f}".format(init.title(), n)
+                                label = "n={:1.1f}".format(n)
                             else:
                                 label = "_nolegend_"
                             ax_area.plot(
                                 times[physics][sim][init][fric][n],
                                 grounded_areas[physics][sim][init][fric][n],
                                 linestyle=lss[sim],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                                 label=label,
                             )
                             ax_gl.plot(
                                 times[physics][sim][init][fric][n],
                                 gls[physics][sim][init][fric][n],
                                 linestyle=lss[sim],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                                 label=label,
                             )
                             ax_vaf.plot(
                                 times[physics][sim][init][fric][n],
                                 vafs[physics][sim][init][fric][n],
                                 linestyle=lss[sim],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                                 label=label,
                             )
                             ax_vel.plot(
                                 times[physics][sim][init][fric][n],
                                 vels[physics][sim][init][fric][n],
                                 linestyle=lss[sim],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                                 label=label,
                             )
         ax_area.set_ylabel("Grounded area [1000 km$^3$]")
@@ -299,45 +299,49 @@ def main():
                 unpert_vels = da.loc[{"attr": "vel", **base_dict}]
                 unpert_vols = da.loc[{"attr": "vaf", **base_dict}]
 
-                ax_vel.fill_between(
-                    da.time,
-                    unpert_vels.min(dim=contract_dims),
-                    unpert_vels.max(dim=contract_dims),
-                    color="0.6",
-                    alpha=0.5,
-                    label="Unperturbed",
-                    ec="none",
-                )
-                ax_gl.fill_between(
-                    da.time,
-                    unpert_terms.min(dim=contract_dims),
-                    unpert_terms.max(dim=contract_dims),
-                    color="0.6",
-                    alpha=0.5,
-                    label="Unperturbed",
-                    ec="none",
-                )
-                ax_vaf.fill_between(
-                    da.time,
-                    unpert_vols.min(dim=contract_dims),
-                    unpert_vols.max(dim=contract_dims),
-                    color="0.6",
-                    alpha=0.5,
-                    label="Unperturbed",
-                    ec="none",
-                )
+                if False:
+                    ax_vel.fill_between(
+                        da.time,
+                        unpert_vels.min(dim=contract_dims),
+                        unpert_vels.max(dim=contract_dims),
+                        color="0.6",
+                        alpha=0.5,
+                        label="Unperturbed",
+                        ec="none",
+                    )
+                    ax_gl.fill_between(
+                        da.time,
+                        unpert_terms.min(dim=contract_dims),
+                        unpert_terms.max(dim=contract_dims),
+                        color="0.6",
+                        alpha=0.5,
+                        label="Unperturbed",
+                        ec="none",
+                    )
+                    ax_vaf.fill_between(
+                        da.time,
+                        unpert_vols.min(dim=contract_dims),
+                        unpert_vols.max(dim=contract_dims),
+                        color="0.6",
+                        alpha=0.5,
+                        label="Unperturbed",
+                        ec="none",
+                    )
 
             for init in ["identical", "true"]:
                 for fric in frics:
                     for n in ns:
                         if times[physics][sim][init][fric][n] is not None:
                             if fric == "3":
-                                label = "{:s} $n$={:1.1f}".format(init.title(), n)
+                                if init == "true":
+                                    label = "{:s} $n$={:1.1f}".format(init.title(), n)
+                                else:
+                                    label = "$n$={:1.1f}".format(n)
                                 ax_vel.plot(
                                     [],
                                     [],
                                     linestyle=lss_fric[fric],
-                                    color=color_dict[init][n][-10],
+                                    color=color_dict_T[init][n][-10],
                                     marker="o",
                                     label=label,
                                 )
@@ -347,27 +351,27 @@ def main():
                                 times[physics][sim][init][fric][n],
                                 gls[physics][sim][init][fric][n],
                                 linestyle=lss_fric[fric],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                             )
                             ax_vaf.plot(
                                 times[physics][sim][init][fric][n],
                                 vafs[physics][sim][init][fric][n],
                                 linestyle=lss_fric[fric],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                             )
                             ax_vel.plot(
                                 times[physics][sim][init][fric][n],
                                 vels[physics][sim][init][fric][n],
                                 linestyle=lss_fric[fric],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                             )
-            ax_vel.plot([], [], ls="solid", color="0.6", label="$m$=3")
-            ax_vel.plot([], [], ls="dashed", color="0.6", label="$m$=1")
-            ax_vel.plot([], [], ls="dotted", color="0.6", label="RCFi")
+            ax_vel.plot([], [], ls="solid", color="0.4", label="$m$=3")
+            ax_vel.plot([], [], ls="dashed", color="0.4", label="$m$=1")
+            ax_vel.plot([], [], ls="dotted", color="0.4", label="RCFi")
 
-            ax_vel.plot([], [], marker="s", color="k", linestyle="None", label="$m$=3")
-            ax_vel.plot([], [], marker="o", color="k", linestyle="None", label="$m$=1")
-            ax_vel.plot([], [], marker="d", color="k", linestyle="None", label="RCFi")
+            ax_vel.plot([], [], marker="s", color="0.4", linestyle="None", label="$m$=3")
+            ax_vel.plot([], [], marker="o", color="0.4", linestyle="None", label="$m$=1")
+            ax_vel.plot([], [], marker="d", color="0.4", linestyle="None", label="RCFi")
 
             fig.subplots_adjust(right=0.75, top=0.98, left=0.13, bottom=0.11)
             ax_gl.set_ylabel("Grounding\nline (km)")
@@ -437,39 +441,40 @@ def main():
                     unpert_vels.min(dim=contract_dims),
                     unpert_vels.max(dim=contract_dims),
                     color="0.6",
-                    alpha=0.5,
                     label="Unperturbed",
-                    ec="none",
+                    ec="0.6",
+                    linewidth=3
                 )
                 ax_gl.fill_between(
                     da.time,
                     unpert_terms.min(dim=contract_dims),
                     unpert_terms.max(dim=contract_dims),
                     color="0.6",
-                    alpha=0.5,
                     label="Unperturbed",
-                    ec="none",
+                    ec="0.6",
+                    linewidth=3
                 )
                 ax_vaf.fill_between(
                     da.time,
                     unpert_vols.min(dim=contract_dims),
                     unpert_vols.max(dim=contract_dims),
                     color="0.6",
-                    alpha=0.5,
                     label="Unperturbed",
-                    ec="none",
+                    ec="0.6",
+                    linewidth=3
                 )
+
 
                 for fric in frics:
                     for n in ns:
                         if times[physics][sim][init][fric][n] is not None:
                             if fric == "3":
-                                label = "{:s} $n$={:1.1f}".format(init.title(), n)
+                                label = "$n$={:1.1f}".format(n)
                                 ax_vel.plot(
                                     [],
                                     [],
                                     linestyle=lss_fric[fric],
-                                    color=color_dict[init][n][-10],
+                                    color=color_dict_T[init][n][-10],
                                     marker="o",
                                     label=label,
                                 )
@@ -479,52 +484,52 @@ def main():
                                 times[physics][sim][init][fric][n],
                                 gls[physics][sim][init][fric][n],
                                 linestyle=lss_fric[fric],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                             )
                             ax_vaf.plot(
                                 times[physics][sim][init][fric][n],
                                 vafs[physics][sim][init][fric][n],
                                 linestyle=lss_fric[fric],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                             )
                             ax_vel.plot(
                                 times[physics][sim][init][fric][n],
                                 vels[physics][sim][init][fric][n],
                                 linestyle=lss_fric[fric],
-                                color=color_dict[init][n][-10],
+                                color=color_dict_T[init][n][-10],
                             )
                 ax_gl.plot(
                     times[physics]["retreat"]["true"]["3"][3.0],
                     gls[physics]["retreat"]["true"]["3"][3.0],
                     linestyle=lss_fric["3"],
-                    color=color_dict["true"][3.0][-10],
+                    color=color_dict_T["true"][3.0][-10],
                 )
                 ax_vaf.plot(
                     times[physics]["retreat"]["true"]["3"][3.0],
                     vafs[physics]["retreat"]["true"]["3"][3.0],
                     linestyle=lss_fric["3"],
-                    color=color_dict["true"][3.0][-10],
+                    color=color_dict_T["true"][3.0][-10],
                 )
                 ax_vel.plot(
                     times[physics]["retreat"]["true"]["3"][3.0],
                     vels[physics]["retreat"]["true"]["3"][3.0],
                     linestyle=lss_fric["3"],
-                    color=color_dict["true"][3.0][-10],
+                    color=color_dict_T["true"][3.0][-10],
                 )
                 ax_vel.plot(
                     [],
                     [],
                     marker="o",
-                    label='"True" ($n$=3)',
-                    color=color_dict["true"][3.0][-10],
+                    label='True ($n$=3)',
+                    color=color_dict_T["true"][3.0][-10],
                 )
-                ax_vel.plot([], [], ls="solid", color="0.6", label="$m$=3")
-                ax_vel.plot([], [], ls="dashed", color="0.6", label="$m$=1")
-                ax_vel.plot([], [], ls="dotted", color="0.6", label="RCFi")
+                ax_vel.plot([], [], ls="solid", color="0.4", label="$m$=3")
+                ax_vel.plot([], [], ls="dashed", color="0.4", label="$m$=1")
+                ax_vel.plot([], [], ls="dotted", color="0.4", label="RCFi")
 
-                ax_vel.plot([], [], marker="s", color="0.6", linestyle="None", label="$m$=3")
-                ax_vel.plot([], [], marker="o", color="0.6", linestyle="None", label="$m$=1")
-                ax_vel.plot([], [], marker="d", color="0.6", linestyle="None", label="RCFi")
+                ax_vel.plot([], [], marker="s", color="0.4", linestyle="None", label="$m$=3")
+                ax_vel.plot([], [], marker="o", color="0.4", linestyle="None", label="$m$=1")
+                ax_vel.plot([], [], marker="d", color="0.4", linestyle="None", label="RCFi")
 
                 fig.subplots_adjust(right=0.75, top=0.98, left=0.13, bottom=0.11)
                 ax_gl.set_ylabel("Grounding\nline (km)")

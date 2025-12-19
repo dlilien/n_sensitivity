@@ -6,7 +6,7 @@ import firedrake
 import icepack
 import icepack.models.hybrid
 import numpy as np
-from firedrake.__future__ import interpolate
+from firedrake import interpolate
 import tqdm
 from icepackaccs import rate_factor, extract_surface
 from icepackaccs.friction import get_weertman, get_regularized_coulomb_simp

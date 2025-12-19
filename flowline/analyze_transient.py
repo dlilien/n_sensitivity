@@ -125,6 +125,7 @@ for nbumps in [2, 1]:
                             output_fn = basename + "/{:s}_{:s}_dev{:1.2f}_n{:2.1f}_{:s}_nbumps{:d}.h5".format(
                                 simname, initname, T_np, n, fricname, nbumps
                             )
+                        print(output_fn)
 
                         with firedrake.CheckpointFile(output_fn, "r") as chk:
                             mesh = chk.load_mesh("flowline")
@@ -221,11 +222,11 @@ for nbumps in [2, 1]:
 
         if initname == "standard":
             figcomb = plt.figure(figsize=(7, 6.0))
-            bottom = 0.18
+            bottom = 0.16
         else:
             figcomb = plt.figure(figsize=(7, 6.5))
             bottom = 0.06
-        gs = gridspec.GridSpec(5, 6, width_ratios=(1, 0.35, 1, 0.35, 0.1, 0.9), height_ratios=(1, 1, 1, 0.1, 0.8), top=0.99, right=0.99, wspace=0.0, bottom=bottom)
+        gs = gridspec.GridSpec(5, 6, width_ratios=(1, 0.35, 1, 0.35, 0.1, 0.9), height_ratios=(1, 1, 1, 0.1, 1), top=0.99, right=0.99, wspace=0.0, bottom=bottom)
         axes_byattr = [
             figcomb.add_subplot(gs[0, :-1]),
             figcomb.add_subplot(gs[1, :-1]),
@@ -467,14 +468,20 @@ for nbumps in [2, 1]:
                 axes_byattr[0].set_ylim(60, 100)
                 axes_byattr[1].set_ylim(-30, 20)
                 axes_byattr[2].set_ylim(-110, 10)
-                axes_bytime[0].set_ylim(-3, 1)
-                axes_bytime[1].set_ylim(-50, 75)
-                axes_bytime[2].set_ylim(-75, 125)
+
+                axes_bytime[0].set_ylim(-2, 0.5)
+
+                axes_bytime[1].set_ylim(-50, 60)
+                axes_bytime[1].set_yticks([-50, -25, 0, 25, 50])
+
+                axes_bytime[2].set_ylim(-60, 110)
+                axes_bytime[2].set_yticks([-50, 0, 50, 100])
+
             else:
                 axes_byattr[0].set_ylim(60, 100)
                 axes_byattr[1].set_ylim(-30, 30)
-                axes_byattr[2].set_ylim(-150, 10)
-                axes_bytime[0].set_ylim(-3, 1)
+                axes_byattr[2].set_ylim(-110, 10)
+                axes_bytime[0].set_ylim(-2, 1)
                 axes_bytime[1].set_ylim(-50, 75)
                 axes_bytime[2].set_ylim(-75, 125)
 
@@ -487,7 +494,10 @@ for nbumps in [2, 1]:
                 axes_byattr[1].set_ylim(-2, 4)
                 axes_byattr[2].set_ylim(-13, 7)
             else:
-                axes_byattr[0].set_ylim(72, 80)
+                if nbumps == 2:
+                    axes_byattr[0].set_ylim(72, 80)
+                else:
+                    axes_byattr[0].set_ylim(70, 75)
                 axes_byattr[1].set_ylim(-26, 1)
                 axes_byattr[2].set_ylim(-70, 0)
         axes_byattr[2].set_xlabel("Time (kyr)")
@@ -530,18 +540,22 @@ for nbumps in [2, 1]:
 
 
         if initname == "identical":
-            axes_bytime[2].text(0.9, 0.28, "Spread with\n$T$=-20 or -5$^\circ$C", transform=figcomb.transFigure, ha="center", va="bottom")
+            axes_bytime[2].text(0.9, 0.28, "Spread with\n$T$=-20 or -5" + r"$^\circ$C", transform=figcomb.transFigure, ha="center", va="bottom")
             axes_bytime[2].annotate("", (2.1, 2.5), (0.9, 0.28), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
             axes_bytime[2].annotate("", (3, 21), (0.9, 0.28), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
             axes_bytime[1].annotate("", (3, 4.2), (0.9, 0.28), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
         else:
-            axes_bytime[2].text(0.9, 0.38, "Spread with\n$T$=-12, -10, or -8$^\circ$C\n$n$=1.8, 3, 3.5, or 4", transform=figcomb.transFigure, ha="center", va="bottom")
-            axes_bytime[2].annotate("", (2, 95), (0.9, 0.38), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
-            axes_bytime[1].annotate("", (2, 51), (0.9, 0.38), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_bytime[2].text(0.9, 0.38, "Spread with\n$T$=-12, -10, or -8" + r"$^\circ$C" + "\n$n$=1.8, 3, 3.5, or 4", transform=figcomb.transFigure, ha="center", va="bottom")
+            if nbumps == 2:
+                axes_bytime[1].annotate("", (2, 51), (0.9, 0.38), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+                axes_bytime[2].annotate("", (2, 95), (0.9, 0.38), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            else:
+                axes_bytime[1].annotate("", (2.2, 51), (0.9, 0.38), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+                axes_bytime[2].annotate("", (2, 105), (0.9, 0.38), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
 
-            axes_bytime[2].annotate("", (0.85, -13), (0.65, 0.08), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
-            axes_bytime[1].annotate("", (1.15, -1), (0.55, 0.08), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
-            axes_bytime[2].text(0.6, 0.00, "Spread with\n$T$=-12, -10, or -8$^\circ$C\nexcluding $n$=3.5", transform=figcomb.transFigure, ha="center", va="bottom")
+            axes_bytime[2].annotate("", (0.85, -13), (0.685, 0.06), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_bytime[1].annotate("", (1.15, -1), (0.55, 0.06), textcoords="figure fraction", arrowprops={"arrowstyle": '->'})
+            axes_bytime[2].text(0.62, 0.00, "Spread with\n$T$=-12, -10, or -8" + r"$^\circ$C" + "\nexcluding $n$=3.5", transform=figcomb.transFigure, ha="center", va="bottom")
 
             axes_byattr[1].text(0.55, 0.7, "Spread of\nunperturbed\nsimulations", transform=figcomb.transFigure, ha="left", va="center")
             axes_byattr[1].annotate("", (0.4, 0.855), (0.55, 0.7), xycoords="figure fraction", textcoords="figure fraction", arrowprops={"arrowstyle": '->'}, zorder=99999, annotation_clip=False)

@@ -46,9 +46,9 @@ color_dict = {
 }
 
 color_dict_T = {init: {n: {-20: lighten_color(c, 0.5),
-                           -12: lighten_color(c, 0.5),
+                           -12: c,
                            -10: c,
-                           -8: lighten_color(c, 1.3),
+                           -8: c,
                            -5: lighten_color(c, 1.3),
                            } for n, c in color_dict[init].items()} for init in color_dict}
 

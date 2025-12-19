@@ -9,6 +9,7 @@
 
 """
 import numpy as np
+import h5py
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 
@@ -22,9 +23,24 @@ from common_colors import ncolors
 
 ns = [1.8, 3, 3.5, 4]
 T = -10
-LCaps = [10.0**i for i in range(3, 10)]
+LCaps = [10.0**i for i in range(3, 8)]
 full_all_outs = {init: {n: {"smoothness": [], "misfit": [], "L": []} for n in ns} for init in ["standard"]}
 
+for init in full_all_outs:
+    fn = "inputs/lcurve_inversion_results_{:s}_bumps2.h5".format(init)
+    all_names = []
+    for n in ns:
+        with h5py.File(fn) as fin:
+            for L in LCaps:
+                name = "T{:d}_n{:2.1f}_L{:2.1e}".format(T, n, L)
+                if name in fin:
+                    all_names.append(name)
+                    group = fin[name]
+                    full_all_outs[init][n]["smoothness"].append(fin[name].attrs["smoothness"])
+                    full_all_outs[init][n]["misfit"].append(fin[name].attrs["loss"])
+                    full_all_outs[init][n]["L"].append(L)
+                else:
+                    continue
 
 fig, ax = plt.subplots(1, 1, figsize=(7, 5))
 ax.loglog()
@@ -47,7 +63,7 @@ for init, ls, marker in [("standard", "solid", "o")]:
             ax.text(mis, smooth, "$10^{:d}$".format(int(np.log10(L))), ha=ha, va="bottom")
 
 ax.set_xlabel("Misfit (m yr$^{-1}$)")
-ax.set_ylabel("Roughness (MPa yr m$^{-2}$)")
+ax.set_ylabel(r"Roughness (MPa$^{-\frac{1}{2}}$ yr$^{-\frac{1}{2}}$ m$^{-\frac{5}{2}}$)")
 ax.legend(loc="best")
 
 fig.tight_layout(pad=0.1)

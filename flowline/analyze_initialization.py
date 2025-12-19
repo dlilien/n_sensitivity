@@ -17,6 +17,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 from common_colors import color_dict_T
 
+ls_dict = {-12: "dotted", -10: "solid", -8: "dashed"}
 
 def kmfmt(x, pos):
     return "{:d}".format(int(x / 1000.0))
@@ -112,6 +113,10 @@ for nbumps in [2, 1]:
 
     def get_taub(u, C):
         return interper.evaluate(firedrake.Function(Q1d).interpolate(-extract_bed(friction_stress(u, C**2.0, m=3)) * 1000))
+
+    def get_sliding(u):
+        sliding = extract_bed(firedrake.Function(V_8).interpolate(u * 100)) / extract_surface(firedrake.Function(V_8).interpolate(u))
+        return interper.evaluate(firedrake.Function(Q1d).interpolate(sliding))
 
     Ts = [-12, -10, -8]
     ns = [1.8, 3.0, 3.5, 4.0]
@@ -263,7 +268,7 @@ for nbumps in [2, 1]:
     axes[2].plot(plot_x, taub, color="k", zorder=1000)
 
     ind = 0
-    for T, lw in zip([Ts[1], Ts[0], Ts[2]], [2, 1, 3]):
+    for T, lw in zip([Ts[1], Ts[0], Ts[2]], [1.5, 1.5, 1.5]):
         for n in ns:
             color = color_dict_T["standard"][n][T]
             ind += 1
@@ -282,38 +287,48 @@ for nbumps in [2, 1]:
                 ) ** 0.5
 
             y = get_at_surf(output_dict[T][n]["u3"] * (2 * (h0_10 > 10) - 1))
+            if T == -10:
+                label = r"$n$={:2.1f}".format(n)
+                # r"{:d}$^\circ$C $n$={:2.1f}".format(T, n)
+            else:
+                label = "_nolegend_"
+
             axes[0].plot(
                 plot_x, y,
                 color=color,
                 lw=lw,
-                label=r"{:d}$^\circ$C $n$={:2.1f}".format(T, n),
+                label=label,
+                ls=ls_dict[T]
             )
 
-            firedrake.plot(
-                firedrake.Function(extract_bed(C0).function_space()).interpolate(
-                    extract_bed(
-                        firedrake.Function(V_8).interpolate(output_dict[T][n]["u3"] * 100 * (2 * (h0_10 > 10) - 1))
+            axes[1].plot(
+                    plot_x,
+                    get_sliding(output_dict[T][n]["u3"]),
+                    color=color,
+                    label=[None],
+                    lw=lw,
+                    ls=ls_dict[T]
                     )
-                    / extract_surface(firedrake.Function(V_8).interpolate(output_dict[T][n]["u3"]))
-                ),
-                axes=axes[1],
-                edgecolor=color,
-                label=[None],
-                lw=lw,
-            )
 
             taub = get_taub(output_dict[T][n]["u3"], output_dict[T][n]["C3"])
-            axes[2].plot(plot_x, taub, color=color, lw=lw)
+            axes[2].plot(plot_x, taub, color=color, lw=lw, ls=ls_dict[T])
         if T == -10:
             leg = axes[0].legend(loc="upper left", bbox_to_anchor=(1.01, 0.99), fontsize=9)
             fig.savefig("figs/initialized_variableC_standard_nbumps{:1d}_{:d}C.pdf".format(nbumps, T))
             leg.remove()
 
+    axes[0].plot([], [], linestyle="solid", color="0.4", label="$T$=-10$^\circ$C")
+    axes[0].plot([], [], linestyle="dotted", color="0.4", label="$T$=-12$^\circ$C")
+    axes[0].plot([], [], linestyle="dashed", color="0.4", label="$T$=-8$^\circ$C")
 
-    handles, labels = axes[0].get_legend_handles_labels()
-    axes[0].legend([handles[0]] + handles[5:9]  + handles[1:5] + handles[9:13],
-                   [labels[0]] + labels[5:9]  + labels[1:5] + labels[9:13],
-                   loc="upper left", bbox_to_anchor=(1.01, 0.99), fontsize=9)
+
+    if False:
+        handles, labels = axes[0].get_legend_handles_labels()
+        axes[0].legend([handles[0]] + handles[5:9]  + handles[1:5] + handles[9:],
+                       [labels[0]] + labels[5:9]  + labels[1:5] + labels[9:],
+                       loc="upper left", bbox_to_anchor=(1.01, 0.99), fontsize=9)
+
+    axes[0].legend(loc="upper left", bbox_to_anchor=(1.01, 0.99), fontsize=9)
 
     for ax, letter in zip(axes, "abcdefgh"):
         ax.text(0.01, 0.98, letter, fontsize=14, ha="left", va="top", transform=ax.transAxes)

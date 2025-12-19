@@ -7,6 +7,14 @@ import matplotlib.pyplot as plt
 from icepackaccs import extract_surface
 from icepack.constants import ice_density as ρ_I, water_density as ρ_W, gravity as g
 
+# Need to muck around to use color consistently outside a package
+import sys
+from pathlib import Path
+parent_dir = Path(__file__).resolve().parent.parent
+sys.path.append(str(parent_dir))
+from common_colors import color_dict_T
+
+
 phys_names = {"": "hybrid", "ssa_": "ssa"}
 dirs = {"": "/Volumes/slate/Rheology/n4/toy_model/outputs", "ssa_": "../toy_model/outputs"}
 physicses = ["", "ssa_"]
@@ -26,48 +34,6 @@ vafs = {physics: {sim: {init: {fric: {} for fric in frics} for init in inits} fo
 vels = {physics: {sim: {init: {fric: {} for fric in frics} for init in inits} for sim in sims} for physics in physicses}
 grounded_areas = {
     physics: {sim: {init: {fric: {} for fric in frics} for init in inits} for sim in sims} for physics in physicses
-}
-
-CW1 = ["#FFA07A", "#FF8C00", "#FF2400"]
-CW2 = ["#FF6347", "#FF0000", "#6B0000"]
-CW3 = ["#ADD8E6", "#4682B4", "#00008B"]
-CW4 = ["#00BFFF", "#1E90FF", "#0E4C92"]
-CW5 = ["#FF77FF", "#FF00FF", "#990099"]
-CW6 = ["#DDA0DD", "#BA55D3", "#4B0082"]
-CW7 = ["#98FB98", "#32CD32", "#004D00"]
-CW8 = ["#9ACD32", "#6B8E23", "#405D20"]
-
-
-color_dict = {
-    "identical": {
-        1.8: {
-            -20: CW1[0],
-            -10: CW1[1],
-            -5: CW1[2],
-        },
-        3.0: {-20: CW3[0], -10: CW3[1], -5: CW3[2]},
-        3.5: {
-            -20: CW5[0],
-            -10: CW5[1],
-            -5: CW5[2],
-        },
-        4.0: {-20: CW7[0], -10: CW7[1], -5: CW7[2]},
-    },
-    "standard": {
-        1.8: {
-            -12: CW2[0],
-            -10: CW2[1],
-            -8: CW2[2],
-        },
-        3.0: {-12: CW4[0], -10: CW4[1], -8: CW4[2]},
-        3.5: {
-            -12: CW6[0],
-            -10: CW6[1],
-            -8: CW6[2],
-        },
-        4.0: {-12: CW8[0], -10: CW8[1], -8: CW8[2]},
-    },
-    "true": {3.0: {-20: "k", -10: "k", -5: "k"}},
 }
 
 targ_times = [10, 50, 500]
@@ -155,7 +121,7 @@ def plot_pts(
     plot_init=True,
     phys="",
     plot_inits=["identical", "standard"],
-    color_dict=color_dict,
+    color_dict=color_dict_T,
 ):
     times = copy.deepcopy(times_in)
     vafs = copy.deepcopy(vafs_in)
@@ -177,6 +143,8 @@ def plot_pts(
                     marker = "d"
                     off = 0.1
 
+                suboff = (ns.index(n) - 1) / 8 * 0.1
+
                 for ax, time in zip(axes, targ_times):
                     if (
                         n not in times[phys]["retreat"][initname][fricname]
@@ -195,7 +163,7 @@ def plot_pts(
                         else:
                             label = None
                         ax.plot(
-                            2 + off,
+                            2 + off + suboff,
                             (
                                 vafs[phys]["retreat"][initname][fricname][n][index]
                                 - vafs[phys]["retreat"][initname][fricname][3][index]
@@ -218,7 +186,7 @@ def plot_pts(
                             label = None
                         if n in vafs[phys]["retreat"][initname]["3"]:
                             ax.plot(
-                                3 + off,
+                                3 + off + suboff,
                                 (
                                     vafs[phys]["retreat"][initname][fricname][n][index]
                                     - vafs[phys]["retreat"][initname]["3"][n][index]
@@ -243,7 +211,7 @@ def plot_pts(
                         and times[""]["retreat"][initname][fricname][n].ndim != 0
                     ):
                         ax.plot(
-                            1 + off,
+                            1 + off + suboff,
                             (
                                 vafs["ssa_"]["retreat"][initname][fricname][n][index]
                                 - vafs[""]["retreat"][initname][fricname][n][index]
@@ -271,7 +239,7 @@ def plot_pts(
                         if initname in ["standard"]:
                             if n in vafs[phys]["retreat"]["identical"][fricname]:
                                 ax.plot(
-                                    4 + off,
+                                    4 + off + suboff,
                                     (
                                         vafs[phys]["retreat"][initname][fricname][n][index]
                                         - vafs[phys]["retreat"]["identical"][fricname][n][index]
@@ -318,7 +286,7 @@ def plot_pts(
 
 
 def plot_init(
-    axes, pos=3, vafs=vafs, targ_times=[100, 500], labelstuff=True, legend=True, xlabelall=False, color_dict=color_dict
+    axes, pos=3, vafs=vafs, targ_times=[100, 500], labelstuff=True, legend=True, xlabelall=False, color_dict=color_dict_T
 ):
     for ax in axes:
         ax.axhline(0, color="k", zorder=0.5, lw=0.5)
@@ -336,6 +304,8 @@ def plot_init(
                 else:
                     marker = "d"
                     off = 0.1
+
+                suboff = (ns.index(n) - 1) / 8 * 0.1
 
                 for ax, time in zip(axes, targ_times):
                     if (
@@ -359,7 +329,7 @@ def plot_init(
                             vafs[""]["retreat"]["identical"][fricname][n][0],
                         )
                         ax.plot(
-                            pos + off,
+                            pos + off + suboff,
                             (
                                 vafs[""]["retreat"][initname][fricname][n][index]
                                 - vafs[""]["retreat"]["identical"][fricname][n][index]
@@ -374,7 +344,7 @@ def plot_init(
                             linestyle="None",
                         )
                         ax.plot(
-                            pos + off,
+                            pos + off + suboff,
                             (
                                 vafs[""]["retreat"][initname][fricname][n][index]
                                 - vafs[""]["retreat"]["identical"][fricname][n][index]

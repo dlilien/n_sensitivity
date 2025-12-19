@@ -249,6 +249,7 @@ def plot_pts(
                 for T_np in shade:
                     for n in [1.8, 3, 4]:
                         vs.append((vol_dict[T_np][n][fricname][time] - vol_dict[T_np][3][fricname][time]) / (vol_dict_pert["True"][time] - vol_dict_pert["True"][0]) * 1e2)
+            print(initname, "1.8, 3, 4, diff n", time, np.max(vs), np.min(vs))
             rect = Rectangle((2 - offsize, np.min(vs)),
                              offsize * 2,
                              np.max(vs) - np.min(vs),
@@ -268,6 +269,7 @@ def plot_pts(
                              zorder=0.5,
                              fill=False,
                              hatch="///")
+            print(initname, "1.8, 3, 4, diff slide", time, np.max(vs), np.min(vs))
             ax.add_patch(rect)
 
             if initname == "standard":
@@ -282,6 +284,7 @@ def plot_pts(
                                  zorder=0.5,
                                  fill=False,
                                  hatch="///")
+                print(initname, "1.8, 3, 4, diff T", time, np.max(vs), np.min(vs))
                 ax.add_patch(rect)
 
             vs = []
@@ -295,6 +298,7 @@ def plot_pts(
                              zorder=0.5,
                              fill=False,
                              hatch='\\\\\\')
+            print(initname, "all n diff n", time, np.max(vs), np.min(vs))
             ax.add_patch(rect)
 
             vs = []
@@ -308,6 +312,7 @@ def plot_pts(
                              zorder=0.5,
                              fill=False,
                              hatch="\\\\\\")
+            print(initname, "all n diff slide", time, np.max(vs), np.min(vs))
             ax.add_patch(rect)
 
             if initname == "standard":
@@ -322,6 +327,7 @@ def plot_pts(
                                  zorder=0.5,
                                  fill=False,
                                  hatch="\\\\\\")
+                print(initname, "all n diff T", time, np.max(vs), np.min(vs))
                 ax.add_patch(rect)
 
 
