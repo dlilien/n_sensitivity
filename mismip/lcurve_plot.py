@@ -145,11 +145,9 @@ def main():
     ax2.set_xlim(0.1, 300)
 
     ax1.legend(loc="upper right", ncol=2)
-    # These would be correct if we did not rescale, but we do!
-    # ax1.set_ylabel("$C_1$ Roughness (MPa yr m$^{-3}$)")
-    # ax2.set_ylabel("$A$ Roughness (MPa$^{-n}$ yr$^{-1}$ m$^{-2}$)")
-    ax1.set_ylabel(r"$C_1$ Roughness (MPa$^{-\frac{1}{2}}$ yr$^{-\frac{1}{2}}$ m$^{-\frac{5}{2}}$)")
-    ax2.set_ylabel("$A_n$ Roughness (ln(MPa$^{-n}$ m$^{-p}$ yr$^{-1}$) m$^{-2}$)")
+    # Rescaled, squared in the integral for J
+    ax1.set_ylabel(r"$C_1$ Roughness (MPa yr$^{-1}$ m$^{-1}$)")
+    ax2.set_ylabel("$A_n$ Roughness (ln$^2$(MPa$^{-n}$ m$^{-p}$ yr$^{-1}$) m$^{-2}$)")
     fig.tight_layout(pad=0.1)
     fig.savefig("plots/all_lcurves.pdf")
 

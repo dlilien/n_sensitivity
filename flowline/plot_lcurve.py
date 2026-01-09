@@ -63,7 +63,7 @@ for init, ls, marker in [("standard", "solid", "o")]:
             ax.text(mis, smooth, "$10^{:d}$".format(int(np.log10(L))), ha=ha, va="bottom")
 
 ax.set_xlabel("Misfit (m yr$^{-1}$)")
-ax.set_ylabel(r"Roughness (MPa$^{-\frac{1}{2}}$ yr$^{-\frac{1}{2}}$ m$^{-\frac{5}{2}}$)")
+ax.set_ylabel(r"Roughness (MPa yr$^{-1}$ m$^{-1}$)")
 ax.legend(loc="best")
 
 fig.tight_layout(pad=0.1)
