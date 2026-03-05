@@ -1,4 +1,4 @@
-# Code for Lilien, Ranganathan, and Shapero, 2025
+# Code for Lilien, Ranganathan, and Shapero, 2026: Effect of the flow-law exponent on ice-stream sensitivity to melt
 
 The two suites of model simulations are run in the two directories.
 
